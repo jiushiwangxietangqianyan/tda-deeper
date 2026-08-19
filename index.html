@@ -8,33 +8,11 @@
 <script>
 window.MathJax = {
   tex: { inlineMath: [['\\(','\\)'],['$','$']], displayMath: [['\\[','\\]'],['$$','$$']], processEscapes: true, packages: {'[+]':['ams']} },
-  chtml: { scale: 0.98 },
+  chtml: { scale: 0.97, fontURL: 'mathjax/output/chtml/fonts/woff-v2/' },
   options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
 };
 </script>
-<script>
-(function(){
-  var srcs = [
-    'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
-    'https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js',
-    'https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js'
-  ];
-  var i = 0;
-  function load(){
-    if(i >= srcs.length) return;
-    var s = document.createElement('script');
-    s.src = srcs[i++];
-    s.async = true;
-    s.onerror = load;
-    s.onload = function(){
-      if(window.MathJax && window.MathJax.typesetPromise)
-        window.MathJax.typesetPromise();
-    };
-    document.head.appendChild(s);
-  }
-  load();
-})();
-</script>
+<script defer src="mathjax/tex-mml-chtml.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -97,15 +75,12 @@ h2.title .sub{display:block;font-family:var(--font-body);font-size:15px;font-wei
   color:var(--mute);letter-spacing:0;margin-top:8px;}
 h3{font-family:var(--font-head);font-size:17.5px;font-weight:600;margin:32px 0 8px;color:var(--ink);}
 p{margin:12px 0;text-align:justify;text-justify:inter-ideograph;overflow-wrap:break-word;word-break:break-word;}
-mjx-container{display:inline-flex;align-items:baseline;vertical-align:baseline;}
-mjx-container[display="true"]{display:flex;justify-content:center;margin:10px 0 6px;overflow-x:auto;overflow-y:hidden;padding:2px 0;}
 .lead{font-size:16.5px;color:var(--ink2);line-height:2.05;}
 strong,b{color:var(--ink);font-weight:700;}
 em{color:var(--blue);font-style:normal;}
 .small{font-size:12.5px;color:var(--mute);}
 code{font-family:var(--font-mono);font-size:12.5px;background:var(--card2);
   border:1px solid var(--line);padding:1px 6px;border-radius:5px;color:#1e40af;}
-mjx-container{color:var(--ink);}
 
 .box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
   padding:18px 22px;margin:20px 0;position:relative;overflow:hidden;}

@@ -1084,7 +1084,7 @@ a:hover{text-decoration:underline;}
       </defs>
       <!-- main spine -->
       <g font-size="11.5" text-anchor="middle">
-        <rect x="150" y="14" width="100" height="24" rx="3" fill="#fff" stroke="#9AA4B2"/><text x="200" y="30">x<sub>ℓ</sub></text>
+        <rect x="150" y="14" width="100" height="24" rx="3" fill="#fff" stroke="#9AA4B2"/><text x="200" y="30">xℓ</text>
         <rect x="150" y="54" width="100" height="24" rx="3" fill="#fff" stroke="#9AA4B2"/><text x="200" y="70">Norm</text>
         <rect x="150" y="94" width="100" height="24" rx="3" fill="#EFF3F8" stroke="#3A5A8C"/><text x="200" y="110">Attn</text>
         <rect x="150" y="134" width="100" height="24" rx="3" fill="#FBEBE7" stroke="#C44E52" stroke-width="1.1"/><text x="200" y="150" fill="#8F3A3E">TDA</text>
@@ -1092,7 +1092,7 @@ a:hover{text-decoration:underline;}
         <rect x="150" y="202" width="100" height="24" rx="3" fill="#fff" stroke="#9AA4B2"/><text x="200" y="218">Norm</text>
         <rect x="150" y="242" width="100" height="24" rx="3" fill="#fff" stroke="#9AA4B2"/><text x="200" y="258">FFN</text>
         <circle cx="200" cy="286" r="10" fill="#fff" stroke="#9AA4B2"/><text x="200" y="290" font-size="10">⊕</text>
-        <rect x="150" y="312" width="100" height="24" rx="3" fill="#fff" stroke="#9AA4B2"/><text x="200" y="328">x<sub>ℓ+1</sub></text>
+        <rect x="150" y="312" width="100" height="24" rx="3" fill="#fff" stroke="#9AA4B2"/><text x="200" y="328">xℓ+1</text>
       </g>
       <g stroke="#9AA4B2" stroke-width="1">
         <line x1="200" y1="38" x2="200" y2="50" marker-end="url(#tgA)"/>
@@ -1108,13 +1108,13 @@ a:hover{text-decoration:underline;}
       <path d="M150 26 C 106 26 106 178 150 178" fill="none" stroke="#C4CBD6" stroke-width="1" marker-end="url(#tgA)"/>
       <path d="M150 188 C 98 188 98 286 150 286" fill="none" stroke="#C4CBD6" stroke-width="1" marker-end="url(#tgA)"/>
       <!-- formula tags (right gutter, top row) -->
-      <text x="266" y="103" font-size="9.5" fill="#46526a">A<sub>ℓ</sub>=softmax(QK<sup>T</sup>/√d)</text>
-      <text x="266" y="143" font-size="9.5" fill="#8F3A3E">M̃<sub>ℓ</sub>=A<sub>ℓ</sub>V<sub>ℓ</sub>−β<sub>ℓ</sub>D<sub>ℓ</sub>M̄<sub>ℓ−1</sub></text>
+      <text x="266" y="106" font-size="9.5" fill="#46526a">Aℓ=softmax(QKᵀ/√d)</text>
+      <text x="266" y="146" font-size="9.5" fill="#8F3A3E">M̃ℓ=AℓVℓ−βℓDℓM̄ℓ−1</text>
       <!-- cached inputs: dashed, routed clear of formula rows -->
-      <line x1="446" y1="82" x2="254" y2="94" stroke="#3A5A8C" stroke-width="1" stroke-dasharray="3,3" opacity=".75"/>
-      <text x="452" y="78" font-size="9.5" fill="#3A5A8C" text-anchor="end">cache A<sub>ℓ−1</sub></text>
-      <line x1="446" y1="170" x2="254" y2="152" stroke="#3A5A8C" stroke-width="1" stroke-dasharray="3,3" opacity=".75"/>
-      <text x="452" y="184" font-size="9.5" fill="#3A5A8C" text-anchor="end">cache M̄<sub>ℓ−1</sub></text>
+      <line x1="446" y1="80" x2="254" y2="92" stroke="#3A5A8C" stroke-width="1" stroke-dasharray="3,3" opacity=".75"/>
+      <text x="452" y="76" font-size="9.5" fill="#3A5A8C" text-anchor="end">cache Aℓ−1</text>
+      <line x1="446" y1="168" x2="254" y2="150" stroke="#3A5A8C" stroke-width="1" stroke-dasharray="3,3" opacity=".75"/>
+      <text x="452" y="182" font-size="9.5" fill="#3A5A8C" text-anchor="end">cache M̄ℓ−1</text>
       <!-- bottom panel: what TDA removes -->
       <rect x="30" y="348" width="400" height="62" rx="3" fill="none" stroke="#C4CBD6" stroke-dasharray="4,4"/>
       <rect x="160" y="342" width="140" height="12" fill="#F7F8FA"/>
@@ -1127,7 +1127,7 @@ a:hover{text-decoration:underline;}
       <line x1="89" y1="388" x2="121" y2="388" stroke="#9AA4B2" stroke-width="1" marker-end="url(#tgA)"/>
       <path d="M139 380 Q 155 368 171 380" fill="none" stroke="#C44E52" stroke-width="1" stroke-dasharray="3,3"/>
       <text x="200" y="384" font-size="9.5" fill="#8F3A3E">reciprocal echo i→j→i</text>
-      <text x="200" y="398" font-size="9" fill="#8C8C8C">R<sub>ℓ</sub>=OffDiag(A<sub>ℓ</sub>⊙A<sub>ℓ−1</sub><sup>T</sup>)</text>
+      <text x="200" y="398" font-size="9" fill="#8C8C8C">Rℓ=OffDiag(Aℓ⊙Aℓ−1ᵀ)</text>
     </svg>
     <figcaption style="border:none;padding-top:4px;margin-top:2px;">TDA 在 OneTrans 块中的位置：主干 Norm→Attn→FFN 不变，仅注意力消息被替换；缓存项以虚线引入。下方面板是被移除的对象——reciprocal echo。</figcaption>
     </figure>

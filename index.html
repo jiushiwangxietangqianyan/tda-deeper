@@ -380,13 +380,17 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">1</span> INTRODUCTION</div>
   <h2 class="title reveal d1">同一个结构，两种深度命运<span class="sub">相同的 self-attention、相同的残差结构——为什么一个能变深，一个在浅层就饱和？</span></h2>
 
-  <p class="lead reveal">语言建模中的 Transformer 几乎可以无限加深，深度成为可扩展的维度；而在广告、排序与推荐场景，统一的排序 Transformer 堆叠至约 6–8 层时增益便趋于平缓，继续加深反而可能更差。二者采用相同的注意力机制与残差结构，因此差异必然源于别处。本文沿三个逐步收紧的环节展开，尽量以符号推进论证：</p>
+  <p class="lead reveal">增加深度是 Transformer 语言模型最稳定的可扩展维度之一；而在推荐与排序场景，序列/生成式排序 Transformer 通常堆叠至约 6–8 层即告饱和，继续加深增益递减甚至转负。二者采用相同的注意力机制与残差结构，深度收益却相差一个量级——这一反差要求一个<b>机制层面</b>的解释，而非工程层面的经验描述。</p>
+
+  <p class="reveal">已有研究给出两条互补的线索。其一，Noci et al.（2022, arXiv:2206.03126）证明：行随机注意力矩阵的跨层乘积使 token 相关性随深度以幂律上升，且在秩 1 处对 \(Q,K\) 的梯度严格为零——深度崩塌是 Transformer <b>固有</b>的性质，与具体数据无关。其二，Cui et al.（2026, arXiv:2607.24025, SpecFormer）进一步指出，推荐场景将这一退化显著提前：长尾 item 分布与用户行为序列的集中，使输入嵌入矩阵<b>先天低秩、谱间隙狭窄</b>，前向低通滤波与反向梯度饥饿构成正反馈，崩塌于是发生在 \(O(1)\) 层，而非随深度渐近显现。</p>
+
+  <p class="reveal">然而，以谱干预直接治疗谱症状并非免费：谱整形须对每层嵌入矩阵执行<b>奇异值分解</b>并重排全部奇异值，\(O(T^2d+Td^2)\) 的附加开销与注意力主体同阶，且 SVD 算子难以像稠密矩阵乘那样充分利用加速硬件。本文给出一条<b>路径层面</b>的替代：先诊断是哪些路径制造了谱集中（§2–§4），再以非回溯算子将其精确移除（§5–§6），全程不引入任何谱分解，附加开销 \(O(HT^2+Td)\) 与 OneTrans 骨干处于同一量级。论证按以下四步展开，记号自足：</p>
 
   <div class="tldr">
     <div class="cell reveal"><div class="n">①</div><div class="c">秩崩塌是注意力的一般机制：行随机矩阵之积逐层收敛到秩 1 退化型，即 \(A_L\cdots A_1\to\mathbf{1}\,\boldsymbol p^\top\)</div></div>
     <div class="cell reveal d1"><div class="n">②</div><div class="c">推荐输入具低秩谱：奇异值集中于首值、谱间隙显著，收缩速率由次主导奇异值 \(|\lambda_2|\) 决定，崩塌被提前至 \(O(1)\) 层</div></div>
     <div class="cell reveal d2"><div class="n">③</div><div class="c">局部化：回溯路径 \(i\to j\to i\) 对连乘引入可辨识的偏差，主导特征向量被反复放大，加速有效秩的下降</div></div>
-    <div class="cell reveal d3"><div class="n">④</div><div class="c">非回溯算子 \(P_2=A^2-D\) 在路径层移除该偏差；TDA 以 \(O(HT^2+Td)\) 的附加开销实现之</div></div>
+    <div class="cell reveal d3"><div class="n">④</div><div class="c">非回溯算子 \(P_2=A^2-D\) 在路径层移除该偏差；TDA 以 \(O(HT^2+Td)\) 的附加开销实现——无需谱分解，整体复杂度与 OneTrans 骨干同阶</div></div>
   </div>
 </section>
 
@@ -600,14 +604,65 @@ a:hover{text-decoration:underline;}
     <p style="margin:6px 0;">SpecFormer 以 fractional effective rank 度量此过程，并论证前向低通与反向饥饿构成<b>互相加强的闭环</b>。其解法——谱整形 \(\widetilde\Sigma\)——直接作用于该闭环：打破前向的谱集中，使次奇异方向重新获得梯度。这一闭环亦解释了为何推荐 Transformer 在远浅于语言模型的层数即发生崩塌。</p>
   </div>
 
-  <div class="flow reveal">
-    <div class="step r"><span class="st">低秩输入</span><div class="tx">\(\sigma_1\gg\sigma_{k\ge2}\)，差异预算近零</div></div>
-    <div class="arr">→</div>
-    <div class="step r"><span class="st">前向：低通平均</span><div class="tx">\(A\) 滤除 token 差异</div></div>
-    <div class="arr">→</div>
-    <div class="step o"><span class="st">反向：梯度饥饿</span><div class="tx">次奇异方向收不到梯度</div></div>
-    <div class="arr">→</div>
-    <div class="step g"><span class="st">更低秩的 H</span><div class="tx">闭环加剧，深度饱和提前</div></div>
+  <div class="figure reveal">
+    <span class="tag red">图 3 · 前向–反向闭环</span>
+    <div class="svgwrap">
+    <svg width="860" height="360" viewBox="0 0 860 360" role="img" aria-label="前向低通与反向梯度饥饿构成的恶性循环">
+      <defs>
+        <marker id="lpR" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ff6b6b"/></marker>
+        <marker id="lpO" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ea580c"/></marker>
+        <marker id="lpG" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8a93a3"/></marker>
+      </defs>
+
+      <!-- trigger annotation -->
+      <g>
+        <text x="58" y="24" font-size="11" font-weight="700" fill="#b45309" font-family="Space Grotesk, Inter, sans-serif">触发条件 · 推荐独有</text>
+        <text x="58" y="44" font-size="10.5" fill="#6b7280">长尾 item × 行为序列集中</text>
+        <text x="58" y="62" font-size="10.5" fill="#6b7280">⇒ H₀ 先天低秩、谱间隙宽</text>
+        <path d="M150 74 Q168 100 190 126" fill="none" stroke="#8a93a3" stroke-width="1.6" stroke-dasharray="4,4" marker-end="url(#lpG)"/>
+      </g>
+
+      <!-- forward arc (H -> A) -->
+      <path d="M350 140 Q430 52 510 140" fill="none" stroke="#ff6b6b" stroke-width="2.5" marker-end="url(#lpR)"/>
+      <text x="430" y="40" font-size="12.5" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">前向 · 低通平均</text>
+      <text x="430" y="60" font-size="10.5" fill="#6b7280" text-anchor="middle">坍缩的 H 生成低秩 A，各行被拉向同一均值方向</text>
+
+      <!-- backward arc (A -> H) -->
+      <path d="M510 248 Q430 336 350 248" fill="none" stroke="#ea580c" stroke-width="2.5" marker-end="url(#lpO)"/>
+      <text x="430" y="322" font-size="12.5" font-weight="700" fill="#ea580c" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">反向 · 梯度饥饿</text>
+      <text x="430" y="342" font-size="10.5" fill="#6b7280" text-anchor="middle">低秩 A 使梯度集中于主导子空间，次奇异方向得不到更新</text>
+
+      <!-- center loop badge -->
+      <circle cx="430" cy="198" r="62" fill="rgba(180,83,9,.04)"/>
+      <text x="430" y="174" font-size="20" fill="#b45309" text-anchor="middle">⟳</text>
+      <text x="430" y="200" font-size="14" font-weight="700" fill="#1a2332" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">恶性循环</text>
+      <text x="430" y="220" font-size="10.5" fill="#46526a" text-anchor="middle">σ₁ 的能量份额逐轮上升</text>
+      <text x="430" y="238" font-size="10.5" fill="#46526a" text-anchor="middle">深度饱和提前至 O(1) 层</text>
+
+      <!-- H card -->
+      <g>
+        <rect x="58" y="128" width="284" height="132" rx="14" fill="#ffffff" stroke="rgba(15,23,42,.14)" stroke-width="1.5"/>
+        <rect x="58" y="126" width="284" height="3.5" rx="1.75" fill="#ff6b6b" opacity=".85"/>
+        <text x="200" y="158" font-size="13" font-weight="700" fill="#1a2332" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">H · token 嵌入矩阵</text>
+        <text x="200" y="182" font-size="11" fill="#46526a" text-anchor="middle">σ₁ ≫ σ_{k≥2}：能量集中于主导方向</text>
+        <text x="200" y="201" font-size="11" fill="#46526a" text-anchor="middle">次奇异方向承载长尾 item 的差异</text>
+        <text x="200" y="220" font-size="11" fill="#46526a" text-anchor="middle">初始即低秩 ⇒ 差异预算近零</text>
+        <text x="200" y="244" font-size="9.5" fill="#7c8798" text-anchor="middle" letter-spacing="1.5">谱崩塌 · 表示侧</text>
+      </g>
+
+      <!-- A card -->
+      <g>
+        <rect x="518" y="128" width="284" height="132" rx="14" fill="#ffffff" stroke="rgba(15,23,42,.14)" stroke-width="1.5"/>
+        <rect x="518" y="126" width="284" height="3.5" rx="1.75" fill="#ea580c" opacity=".85"/>
+        <text x="660" y="158" font-size="13" font-weight="700" fill="#1a2332" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">A · 注意力矩阵</text>
+        <text x="660" y="182" font-size="11" fill="#46526a" text-anchor="middle">坍缩 H ⇒ Q,K 同源 ⇒ A 低秩</text>
+        <text x="660" y="201" font-size="11" fill="#46526a" text-anchor="middle">行随机 ⇒ 低通平均，只留主导方向</text>
+        <text x="660" y="220" font-size="11" fill="#46526a" text-anchor="middle">前向滤除差异 · 反向阻断更新</text>
+        <text x="660" y="244" font-size="9.5" fill="#7c8798" text-anchor="middle" letter-spacing="1.5">谱崩塌 · 动力侧</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption><b>前向–反向闭环（依 SpecFormer 的刻画改绘）。</b> 推荐输入因长尾与行为集中而先天低秩（触发条件）；前向通路上，坍缩的 H 生成低秩注意力 A，低通平均逐层滤除次奇异方向的差异；反向通路上，低秩 A 使梯度集中于主导子空间，次奇异方向得不到更新（梯度饥饿）。两条通路在 H 与 A 之间闭合为正反馈：σ₁ 的能量份额逐轮上升，有效秩在 \(O(1)\) 层内耗尽。打破闭环的切入点有二——重排谱（SpecFormer，须逐层 SVD），或移除制造集中的路径（§5–§6，无需谱分解）。</figcaption>
   </div>
 
   <p class="reveal">但整体平均的视角仍停留在"秩 1 极限"的粗粒度描述上，它区分不了<b>是哪些路径</b>在加速这一过程。下一节我们把镜头对准相邻两层之间的路径结构。</p>
@@ -656,7 +711,7 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag gold">图 3 · 回溯路径与 hub 局部化</span>
+    <span class="tag gold">图 4 · 回溯路径与 hub 局部化</span>
     <div class="svgwrap">
     <svg width="900" height="250" viewBox="0 0 900 250" role="img" aria-label="回溯路径与 hub 局部化">
       <defs>
@@ -757,7 +812,7 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag cy">图 4 · 一个算子的构造</span>
+    <span class="tag cy">图 5 · 一个算子的构造</span>
     <div class="svgwrap">
     <svg width="760" height="230" viewBox="0 0 760 230" role="img" aria-label="A 平方减去 D 等于非回溯矩阵">
       <rect x="0" y="0" width="760" height="230" rx="12" fill="none"/>
@@ -800,7 +855,7 @@ a:hover{text-decoration:underline;}
 
   <div class="box reveal">
     <div class="lbl">血统与边界</div>
-    <p style="margin:4px 0;">TDA 继承的是非回溯理论的<b>路径级构造</b>（degree-two 的 \(A^2-D\)），而非固定图上完整的 Ihara–Bass 谱结论。注意力图稠密、加权、有向且随层变化，不存在现成的完整谱等价。TDA 是 degree-two 截断：移除可明确识别的回溯项；其去局部化与保秩效果，仍需由注意力乘积的 IPR 与奇异谱实验确认。此外，Martin et al. (2014) 指出非回溯矩阵并非对所有结构免疫——例如在团（clique）上仍可能局部化；在注意力语境下，这意味着"整组 token 互相高度关注"的稠密子结构是 TDA 不触及的、可能保留的另一种集中来源。与 SpecFormer 的分工亦由此界定：<b>谱整形重排全部奇异值，TDA 仅剔除回溯路径</b>——前者作用于谱，后者作用于路径。</p>
+    <p style="margin:4px 0;">TDA 继承的是非回溯理论的<b>路径级构造</b>（degree-two 的 \(A^2-D\)），而非固定图上完整的 Ihara–Bass 谱结论。注意力图稠密、加权、有向且随层变化，不存在现成的完整谱等价。TDA 是 degree-two 截断：移除可明确识别的回溯项；其去局部化与保秩效果，仍需由注意力乘积的 IPR 与奇异谱实验确认。此外，Martin et al. (2014) 指出非回溯矩阵并非对所有结构免疫——例如在团（clique）上仍可能局部化；在注意力语境下，这意味着"整组 token 互相高度关注"的稠密子结构是 TDA 不触及的、可能保留的另一种集中来源。与 SpecFormer 的分工亦由此界定：<b>谱整形重排全部奇异值，TDA 仅剔除回溯路径</b>——前者作用于谱（须逐层 SVD），后者作用于路径（仅 Hadamard 积与对角运算）。</p>
   </div>
 </section>
 
@@ -885,7 +940,14 @@ a:hover{text-decoration:underline;}
 <span class="hl"><span class="c"># 对 H 头：O(HT² + Td)，低于注意力本身 O(T²d)（因 d_h ≫ 1）</span></span><br>
 <span class="c"># 且 P 复用上一层 W_V → 不引入任何新参数</span>
     </div>
-    <p style="margin:4px 0;">互反对积 \(A_\ell\odot A_{\ell-1}^{\top}\) 与行和 \(O(HT^2)\)（缓存 \(O(HT^2)\)）；历史投影复用上一层 \(W_V\)，\(O(Td)\)；对角修正与减法 \(O(Td)\)。总计每块 <b>\(O(HT^2+Td)\)</b>——相对注意力本身的 \(O(T^2d)\) 低一个 \(d_h\) 因子，相对谱整形的 \(O(T^2d+Td^2)\) 可以忽略。短序列推荐（\(T\approx59\)）实测开销约 2–3% FLOPs。</p>
+    <p style="margin:4px 0;">互反对积 \(A_\ell\odot A_{\ell-1}^{\top}\) 与行和 \(O(HT^2)\)（缓存 \(O(HT^2)\)）；历史投影复用上一层 \(W_V\)，\(O(Td)\)；对角修正与减法 \(O(Td)\)。总计每块 <b>\(O(HT^2+Td)\)</b>——相对注意力本身的 \(O(T^2d)\) 低一个 \(d_h\) 因子。短序列推荐（\(T\approx59\)）实测开销约 2–3% FLOPs。</p>
+    <div style="margin:10px 0 4px;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12.5px;">
+      <div style="display:flex;background:var(--card2);padding:7px 14px;font-family:var(--font-head);font-weight:700;color:var(--ink2);"><span style="flex:1.3;">方法（每块）</span><span style="flex:1;">附加开销</span><span style="flex:1.9;">备注</span></div>
+      <div style="display:flex;padding:7px 14px;border-top:1px solid var(--line);"><span style="flex:1.3;">OneTrans 骨干 · 标准注意力</span><span style="flex:1;font-family:var(--font-mono);">\(O(T^2d)\)</span><span style="flex:1.9;color:var(--ink2);">主体开销</span></div>
+      <div style="display:flex;padding:7px 14px;border-top:1px solid var(--line);"><span style="flex:1.3;">SpecFormer · 谱整形</span><span style="flex:1;font-family:var(--font-mono);">\(O(T^2d+Td^2)\)</span><span style="flex:1.9;color:var(--ink2);">须逐层 SVD，与主体同阶；SVD 难以充分利用矩阵乘加速硬件</span></div>
+      <div style="display:flex;padding:7px 14px;border-top:1px solid var(--line);background:rgba(5,150,105,.05);"><span style="flex:1.3;font-weight:600;">TDA · 本文</span><span style="flex:1;font-family:var(--font-mono);">\(O(HT^2+Td)\)</span><span style="flex:1.9;color:var(--ink2);">无谱分解、零新参数；整体仍为 \(O(T^2d)\)，与 OneTrans 骨干同阶</span></div>
+    </div>
+    <p style="margin:4px 0;">换言之，搭载 TDA 的模型与 OneTrans 骨干在<b>时间复杂度的量级上完全一致</b>：修正只动用 Hadamard 积、行和与对角缩放这些低阶算子，回避了谱方法必须承担的逐层 SVD。</p>
   </div>
 
   <h3 class="reveal">四条性质</h3>
@@ -923,7 +985,7 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag grn">图 5 · 崩塌速率对比</span>
+    <span class="tag grn">图 7 · 崩塌速率对比</span>
     <div class="imgwrap">
       <img src="conclusion_row_sim_effrank.png" alt="row similarity 与 effective rank 随层数的演化：TDA 崩塌更慢">
     </div>
@@ -974,7 +1036,7 @@ a:hover{text-decoration:underline;}
       <span class="node"></span>
       <div class="card">
         <h4>⑤ TDA：门控减回溯</h4>
-        <p>缓存相邻层注意力、读出回溯质量、门控减去。row similarity 与 effective rank 的退化均放缓。</p>
+        <p>缓存相邻层注意力、读出回溯质量、门控减去；无需 SVD，附加开销 \(O(HT^2+Td)\)，整体与 OneTrans 骨干同阶。row similarity 与 effective rank 的退化均放缓。</p>
       </div>
     </div>
     <div class="item reveal d5" style="--c:#059669;">

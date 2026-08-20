@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Make it Deeper · 非回溯注意力与排序 Transformer 的深度之锁</title>
-<meta name="description" content="从 Transformer 的深度崩塌，到推荐输入的低秩谱，再到网络科学中的局部化：一个以符号推进的论证。">
-<meta property="og:title" content="Make it Deeper · 非回溯注意力与排序 Transformer 的深度之锁">
+<title>Take it Longer, Make it Deeper · 非回溯注意力与排序 Transformer 的深度饱和</title>
+<meta name="description" content="从 Transformer 固有的秩崩塌，到推荐输入的低秩谱，再到回溯路径引入的局部化偏差：一篇以统一记号推进的研究笔记，与非回溯注意力（TDA）的初步观测。">
+<meta property="og:title" content="Take it Longer, Make it Deeper · 非回溯注意力与排序 Transformer 的深度饱和">
 <meta property="og:description" content="从 Transformer 的深度崩塌，到推荐输入的低秩谱，再到网络科学中的局部化：一个以符号推进的论证。">
 <meta property="og:type" content="article">
 <meta name="theme-color" content="#ffffff">
@@ -247,7 +247,7 @@ a:hover{text-decoration:underline;}
 <div id="prog"></div>
 
 <nav>
-  <span class="logo">Make it Deeper</span>
+  <span class="logo">Take it Longer · Make it Deeper</span>
   <a href="#intro">引言</a>
   <a href="#sec2">深度崩塌</a>
   <a href="#sec3">低秩谱</a>
@@ -261,8 +261,8 @@ a:hover{text-decoration:underline;}
 <header class="hero">
   <div class="inner">
     <div class="kick reveal" style="justify-content:center;">研究笔记 · 排序 Transformer 的深度扩展</div>
-    <h1 class="reveal d1">Make it Deeper</h1>
-    <p class="subtitle reveal d2">语言模型可将同一注意力结构堆叠至上千层，排序 Transformer 却往往在约第 6 层即停止增益。本文沿 <b>一般机制</b> &rarr; <b>输入几何</b> &rarr; <b>路径结构</b> 三个环节逐层推进：首先考察 Transformer 的秩崩塌这一一般机制；继而说明推荐输入的低秩谱如何使崩塌提前触发；最后指出，网络科学中称为"局部化"的现象，其路径级根源在于回溯路径对矩阵连乘引入的偏差，并据此提出非回溯注意力（TDA）作为候选修正。</p>
+    <h1 class="reveal d1">Take it Longer,<br>Make it Deeper</h1>
+    <p class="subtitle reveal d2">语言模型可将同一注意力结构堆叠至上千层，排序 Transformer 却往往在约第 6 层即停止增益。本文沿 <b>一般机制</b> &rarr; <b>输入几何</b> &rarr; <b>路径结构</b> 三个环节逐层推进：首先回顾 Transformer 固有的秩崩塌机制（Noci et al. 2022）；继而说明推荐输入的低秩谱如何使崩塌提前触发（Cui et al. 2026）；最后指出，网络科学中的"局部化"现象，其路径级根源在于回溯路径对矩阵连乘引入的偏差，并据此讨论非回溯注意力（TDA）作为候选修正——以及尚待验证的边界。</p>
     <div class="pillrow reveal d3">
       <span class="pill">行随机连乘 &rarr; 秩 1</span>
       <span class="pill">奇异谱集中</span>
@@ -293,12 +293,12 @@ a:hover{text-decoration:underline;}
     <circle cx="720" cy="200" r="180" fill="url(#heroGlowR)"/>
 
     <!-- left labels -->
-    <text x="240" y="46" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">普通传播 · 回溯环</text>
-    <text x="240" y="66" font-size="11" fill="#6b7280" text-anchor="middle">质量在 i ↔ j 之间空转，被锁在原地</text>
+    <text x="240" y="46" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">回溯式传播</text>
+    <text x="240" y="66" font-size="11" fill="#6b7280" text-anchor="middle">质量沿 i → j → i 原路返回，不产生跨 token 传递</text>
 
     <!-- right labels -->
-    <text x="720" y="46" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">非回溯传播 · 一路向前</text>
-    <text x="720" y="66" font-size="11" fill="#6b7280" text-anchor="middle">信息 i → j → k 逐层累积，深度由此而生</text>
+    <text x="720" y="46" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">非回溯式传播</text>
+    <text x="720" y="66" font-size="11" fill="#6b7280" text-anchor="middle">信息沿 i → j → k 持续前向传递</text>
 
     <!-- center divider -->
     <line x1="480" y1="60" x2="480" y2="350" stroke="rgba(15,23,42,.12)" stroke-dasharray="4,6"/>
@@ -336,8 +336,8 @@ a:hover{text-decoration:underline;}
         <animateMotion dur="1.4s" begin="0.45s" repeatCount="indefinite" path="M304 225 L176 225"/>
       </circle>
     </g>
-    <text x="240" y="330" font-size="12" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">A_{ℓ,ij} · A_{ℓ−1,ji} &gt; 0  →  b_ℓ,i 累积</text>
-    <text x="240" y="352" font-size="11" fill="#6b7280" text-anchor="middle">每一步都回到起点：差异不流动，主模态局部化</text>
+    <text x="240" y="330" font-size="12" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">A<tspan dy="3" font-size="9">ℓ,ij</tspan><tspan dy="-3"> · A</tspan><tspan dy="3" font-size="9">ℓ−1,ji</tspan><tspan dy="-3"> &gt; 0　⇒　b</tspan><tspan dy="3" font-size="9">ℓ,i</tspan><tspan dy="-3"> 累积</tspan></text>
+    <text x="240" y="352" font-size="11" fill="#6b7280" text-anchor="middle">两步回到起点：跨 token 的差异传递被跳过</text>
 
     <!-- ============ RIGHT: forward path ============ -->
     <g>
@@ -368,7 +368,7 @@ a:hover{text-decoration:underline;}
       </g>
     </g>
     <text x="720" y="330" font-size="12" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">P₂ = A² − D 精确清掉回返项</text>
-    <text x="720" y="352" font-size="11" fill="#6b7280" text-anchor="middle">信息持续向前：有效秩被保住，深度可以增长</text>
+    <text x="720" y="352" font-size="11" fill="#6b7280" text-anchor="middle">差异持续前向传递：有助于维持有效秩（待 §7 检验）</text>
   </svg>
   </div>
   </div>
@@ -384,7 +384,7 @@ a:hover{text-decoration:underline;}
 
   <p class="reveal">已有研究给出两条互补的线索。其一，Noci et al.（2022, arXiv:2206.03126）证明：行随机注意力矩阵的跨层乘积使 token 相关性随深度以幂律上升，且在秩 1 处对 \(Q,K\) 的梯度严格为零——深度崩塌是 Transformer <b>固有</b>的性质，与具体数据无关。其二，Cui et al.（2026, arXiv:2607.24025, SpecFormer）进一步指出，推荐场景将这一退化显著提前：长尾 item 分布与用户行为序列的集中，使输入嵌入矩阵<b>先天低秩、谱间隙狭窄</b>，前向低通滤波与反向梯度饥饿构成正反馈，崩塌于是发生在 \(O(1)\) 层，而非随深度渐近显现。</p>
 
-  <p class="reveal">然而，以谱干预直接治疗谱症状并非免费：谱整形须对每层嵌入矩阵执行<b>奇异值分解</b>并重排全部奇异值，\(O(T^2d+Td^2)\) 的附加开销与注意力主体同阶，且 SVD 算子难以像稠密矩阵乘那样充分利用加速硬件。本文给出一条<b>路径层面</b>的替代：先诊断是哪些路径制造了谱集中（§2–§4），再以非回溯算子将其精确移除（§5–§6），全程不引入任何谱分解，附加开销 \(O(HT^2+Td)\) 与 OneTrans 骨干处于同一量级。论证按以下四步展开，记号自足：</p>
+  <p class="reveal">然而，以谱干预直接治疗谱症状并非没有代价：谱整形须对每层嵌入矩阵执行<b>奇异值分解</b>并重排全部奇异值，\(O(T^2d+Td^2)\) 的附加开销与注意力主体同阶，且 SVD 算子难以像稠密矩阵乘那样充分利用加速硬件。本文探讨一条<b>路径层面</b>的替代路线：先诊断是哪些路径制造了谱集中（§2–§4），再以非回溯算子将其精确移除（§5–§6），全程不引入任何谱分解，附加开销 \(O(HT^2+Td)\) 与 OneTrans 骨干处于同一量级。论证按以下四步展开，全文记号统一（记号表见 §2 开头）：</p>
 
   <div class="tldr">
     <div class="cell reveal"><div class="n">①</div><div class="c">秩崩塌是注意力的一般机制：行随机矩阵之积逐层收敛到秩 1 退化型，即 \(A_L\cdots A_1\to\mathbf{1}\,\boldsymbol p^\top\)</div></div>
@@ -399,7 +399,22 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">2</span> RANK COLLAPSE IN DEPTH</div>
   <h2 class="title reveal d1">深层崩塌：行随机连乘趋向秩 1<span class="sub">注意力的一次加权平均本质，是后续一切讨论的出发点</span></h2>
 
-  <p class="lead reveal">记第 \(\ell\) 层输入 token 矩阵为 \(X^{\ell}\in\mathbb{R}^{T\times d}\)，其中 \(T\) 为序列长度、\(d\) 为表示维度。标准自注意力先经线性投影 \(Q_{\ell}=X^{\ell}W^{Q},\; K_{\ell}=X^{\ell}W^{K},\; V_{\ell}=X^{\ell}W^{V}\)，再对各行施加 softmax 归一化：</p>
+  <div class="box reveal">
+    <div class="lbl">记号约定（全文一致）</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:2px 28px;font-size:13.5px;margin:4px 0;">
+      <div>\(T,d\)：序列长度、表示维度</div>
+      <div>\(H^{\ell}\in\mathbb{R}^{T\times d}\)：第 \(\ell\) 层 token 矩阵（\(H^1\) 为输入嵌入）</div>
+      <div>\(A_\ell\in\mathbb{R}^{T\times T}\)：第 \(\ell\) 层注意力权重（行随机）</div>
+      <div>\(M_\ell=A_\ell V_\ell\)：第 \(\ell\) 层注意力消息</div>
+      <div>\(\sigma_k(\cdot)\)：第 \(k\) 个奇异值；\(\lambda_2(\cdot)\)：次主特征值</div>
+      <div>\(\mathrm{erank}(\cdot)\)：有效秩（§7 定义）</div>
+      <div>\(b_{\ell,i},\;D_\ell\)：token \(i\) 的回溯质量及其对角矩阵（§4 定义，§6 复用）</div>
+      <div>\(\beta_{\ell,h}\in[0,1]\)：TDA 的可学门控（§6）</div>
+    </div>
+    <p style="margin:4px 0;color:var(--mute);font-size:12.5px;">引用定理时若原文记号不同（如 Noci et al. 以 \(X\) 记 token 矩阵），均统一改写为上表记号，并在文中注明。</p>
+  </div>
+
+  <p class="lead reveal">记第 \(\ell\) 层输入 token 矩阵为 \(H^{\ell}\in\mathbb{R}^{T\times d}\)。标准自注意力先经线性投影 \(Q_{\ell}=H^{\ell}W^{Q},\; K_{\ell}=H^{\ell}W^{K},\; V_{\ell}=H^{\ell}W^{V}\)，再对各行施加 softmax 归一化：</p>
 
   <div class="box reveal">
     <div class="lbl">注意力权重是行随机矩阵</div>
@@ -484,8 +499,8 @@ a:hover{text-decoration:underline;}
   <div class="thm reveal d1">
     <div class="lbl">定理（Noci et al. 2022, arXiv:2206.03126）</div>
     <p style="margin:6px 0;">在初始化假设 \(A_\ell\approx\tfrac1T\mathbf{1}\mathbf{1}^\top\) 下，定义 token 平均相关性</p>
-    \[\rho^{\ell}=\frac{1}{T(T-1)}\sum_{k\ne k'}\frac{\langle X_k^{\ell},\,X_{k'}^{\ell}\rangle}{\lVert X_k^{\ell}\rVert\,\lVert X_{k'}^{\ell}\rVert}\]
-    <p style="margin:6px 0;">他们沿三个层次刻画崩塌（记号按原文）：</p>
+    \[\rho^{\ell}=\frac{1}{T(T-1)}\sum_{k\ne k'}\frac{\langle H_k^{\ell},\,H_{k'}^{\ell}\rangle}{\lVert H_k^{\ell}\rVert\,\lVert H_{k'}^{\ell}\rVert}\]
+    <p style="margin:6px 0;">他们沿三个层次刻画崩塌（原文以 \(X\) 记 token 矩阵，此处统一改写为 \(H\)）：</p>
     <ul style="margin:6px 0;padding-left:20px;">
       <li><b>Lemma 3.1（梯度范数消失）</b>：若第 \(\ell\) 层的 token 相关性 \(\rho^\ell\to1\)，则输出 \(X^\ell\) 依概率收敛到秩 1 矩阵；在均匀注意力假设 \(A_\ell=\tfrac1T\mathbf 1\mathbf 1^\top\) 下，<b>对 \(Q,K\) 的梯度范数严格为零</b>——表示空间坍缩的同时，学习信号被同步切断。</li>
       <li><b>Theorem 3.1（梯度消失）</b>：Token 相关性在<b>无限深</b>极限下以幂律方式趋于 1（而非指数），由此导致的梯度消失是<b>秩崩塌的直接后果</b>：梯度范数随深度收敛到 0，其速率由剩余相关性决定。</li>
@@ -512,16 +527,31 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">3</span> LOW-RANK SPECTRUM OF RECOMMENDATION INPUT</div>
   <h2 class="title reveal d1">推荐输入的低秩谱：奇异值集中，谱间隙大<span class="sub">机制相同，触发却提前：起始状态已不同</span></h2>
 
-  <p class="lead reveal">语言 token 位于连续平滑的语义流形上；推荐 token 则高度离散、异质且严重长尾——同一 item、创作者、类目或意图在一次请求的近期行为中反复出现。Cui et al. (2026, SpecFormer) 观察到，这种异质与长尾直接表现为嵌入矩阵的<b>谱崩塌（spectral collapse）</b>：</p>
+  <p class="lead reveal">语言 token 位于连续平滑的语义流形上；推荐 token 则高度离散、异质且严重长尾——同一 item、创作者、类目或意图在一次请求的近期行为中反复出现。Cui et al. (2026, SpecFormer) 将其后果归纳为<b>谱崩塌（spectral collapse）</b>。为把这一概念说清楚，我们先给出它的形式化定义，再说明推荐数据为何天然触发它。</p>
 
   <div class="thm reveal">
+    <div class="lbl">定义 · 谱崩塌与有效秩</div>
+    <p style="margin:6px 0;">对矩阵 \(H\in\mathbb{R}^{T\times d}\) 做奇异值分解 \(H=U\Sigma V^\top\)，\(\Sigma=\operatorname{diag}(\sigma_1,\dots,\sigma_r)\)，\(\sigma_1\ge\sigma_2\ge\cdots\)。记归一化能量份额 \(p_k=\sigma_k^2/\sum_{k'}\sigma_{k'}^2\)，有效秩 \(\mathrm{erank}(H)=\exp(-\sum_k p_k\log p_k)\)。<b>谱崩塌</b>指如下状态：</p>
+    \[p_1\;\to\;1,\qquad \mathrm{erank}(H)\;\to\;1,\qquad \sigma_{k\ge2}\le\epsilon\,\sigma_1\ (\epsilon\ll 1)\]
+    <p style="margin:6px 0;">直观地说：几乎全部表示能量集中在<b>一个</b>方向上，其余方向（长尾 item 的差异所在）近乎为零——表示空间在统计意义上退化为一条直线。</p>
+  </div>
+
+  <div class="thm reveal d1">
+    <div class="lbl">命题 · 行相关直接导致能量集中</div>
+    <p style="margin:6px 0;">谱崩塌并非推荐独有的现象，但推荐数据以一个可直接刻画的方式触发它。设输入 \(H^1\) 的各行范数相等为 \(\nu\)，且任意两行的余弦相似度不低于 \(\rho\)（行为序列的重复性使 \(\rho\) 接近 1）。则首个奇异值的能量份额有下界</p>
+    \[\frac{\sigma_1^2}{\sum_k\sigma_k^2}\;\ge\;\frac{1+(T-1)\,\rho}{T}\]
+    <p style="margin:6px 0;"><i>证明</i>：取单位向量 \(u=H^{\top}\mathbf 1/\lVert H^{\top}\mathbf 1\rVert\) 与 \(w=\mathbf 1/\sqrt T\)，则 \(\sigma_1^2\ge\lVert Hw\rVert^2=\tfrac1T\mathbf 1^{\top}HH^{\top}\mathbf 1=\tfrac1T\sum_{i,j}\langle H_i,H_j\rangle\ge\tfrac{1+(T-1)\rho}{T}\sum_k\sigma_k^2\)。∎</p>
+    <p style="margin:6px 0;">以 \(T=60\)、\(\rho=0.85\) 为例，下界即达 \(\approx 0.85\)：单一请求内 token 的高度相关，已足以使谱显著集中。该下界只刻画集中趋势的下限，实际谱还受 embedding 表学习动态影响；但其含义是明确的——<b>推荐输入的谱崩塌源于数据，而非模型</b>。</p>
+  </div>
+
+  <div class="box reveal d2">
     <div class="lbl">观测（SpecFormer, arXiv:2607.24025）</div>
-    <p style="margin:6px 0;">对输入嵌入矩阵 \(H\in\mathbb{R}^{T\times d}\) 做奇异值分解 \(H=U\Sigma V^\top\)，\(\Sigma=\operatorname{diag}(\sigma_1,\dots,\sigma_r)\)，\(\sigma_1\ge\sigma_2\ge\cdots\)。推荐场景下谱高度集中：</p>
+    <p style="margin:6px 0;">在推荐场景的真实模型上，Cui et al. 观测到上述状态随训练加深：</p>
     \[\frac{\sigma_1}{\sum_k\sigma_k}\;\text{接近 1},\qquad \sigma_{k\ge2}\le\epsilon\,\sigma_1\quad(\epsilon\ll 1)\]
-    <p style="margin:6px 0;">即<b>第一个奇异值独占几乎全部能量，其余奇异值迅速衰减——谱间隙大</b>。少数主奇异向量支配表示空间，长尾信息所在的次奇异方向被压制。SpecFormer 以奇异值整形（spectral reshaping）量化这一观测：</p>
+    <p style="margin:6px 0;">少数主奇异向量支配表示空间，长尾信息所在的次奇异方向被压制。SpecFormer 以奇异值整形（spectral reshaping）直接干预该状态：</p>
     \[\widetilde\Sigma=\operatorname{diag}\!\big(\sigma_1^{\tau},\,\sigma_2^{\tau},\,\dots,\,\sigma_r^{\tau}\big),\qquad
-      \tau=\operatorname{Sigmoid}(a)\in(0,1)\]
-    <p style="margin:6px 0;">指数 \(\tau<1\) 对大奇异值施加压缩、对小奇异值相对保留：\(\sigma_k\mapsto\sigma_k^{\tau}\) 使集中能量重新分布。参数 \(a\) 初始化为 \(\tau\approx0.5\)，随训练自适应——谱整形是一个<b>连续可微的全局重排</b>，作用于嵌入矩阵 \(H\) 本身。</p>
+      \tau=\mathrm{Sigmoid}(a)\in(0,1)\]
+    <p style="margin:6px 0;">指数 \(\tau<1\) 对大奇异值施加压缩、对小奇异值相对保留：\(\sigma_k\mapsto\sigma_k^{\tau}\) 使集中能量重新分布。参数 \(a\) 初始化使 \(\tau\approx0.5\)，随训练自适应——谱整形是一个<b>连续可微的全局重排</b>，作用于嵌入矩阵 \(H\) 本身；其代价是须对每层执行 SVD（见 §6 的复杂度对比）。</p>
   </div>
 
   <div class="figure reveal">
@@ -563,10 +593,10 @@ a:hover{text-decoration:underline;}
       </g>
       <line x1="492" y1="220" x2="782" y2="220" stroke="rgba(15,23,42,.15)"/>
       <text x="500" y="238" fill="#6b7280">奇异值序号 k</text>
-      <text x="496" y="112" fill="#ff6b6b" font-size="10.5">σ₁ ≫ σ_{k≥2}</text>
+      <text x="496" y="112" fill="#ff6b6b" font-size="10.5">σ₁ ≫ σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3">　（谱间隙宽）</tspan></text>
       <rect x="492" y="60" width="290" height="40" rx="10" fill="rgba(255,107,107,.05)" stroke="rgba(255,107,107,.2)"/>
-      <text x="502" y="78" fill="#ff9f68" font-size="11">差异预算 ≈ Σ_{k≥2} σ_k² 几乎为零</text>
-      <text x="502" y="93" fill="#46526a" font-size="10.5">注意力是低通平均 → 仅剩的一点点差异，数层即耗尽</text>
+      <text x="502" y="78" fill="#ff9f68" font-size="11">差异能量 Σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3"> σ</tspan><tspan dy="3" font-size="8">k</tspan><tspan dy="-3">² ≈ 0</tspan></text>
+      <text x="502" y="93" fill="#46526a" font-size="10.5">输入侧已无差异可保留，注意力再逐层压缩</text>
       <defs>
         <linearGradient id="freqBar1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff9f68"/><stop offset="100%" stop-color="#ff6b6b"/></linearGradient>
         <linearGradient id="freqBar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb87a"/><stop offset="100%" stop-color="#ff8a5e"/></linearGradient>
@@ -581,33 +611,33 @@ a:hover{text-decoration:underline;}
     <figcaption><b>推荐输入的几何。</b> (a) 特征频次长尾：少数 token 反复出现，使请求内嵌入高度自相关；(b) 奇异谱 \(\sigma_1\) 独占几乎全部能量。输入矩阵在注意力<b>之前</b>就已经低秩——这是与语言场景的根本差异。</figcaption>
   </div>
 
-  <h3 class="reveal">把"差异预算"写成公式</h3>
+  <h3 class="reveal">差异能量的定量刻画</h3>
   <p class="reveal">把 token 矩阵拆成均值方向与差异方向：</p>
-  \[X=\underbrace{\mathbf{1}\,\bar x^{\top}}_{\text{均值（秩 1）}}+\underbrace{X_{\perp}}_{\text{差异（被逐层压缩）}}\]
+  \[H=\underbrace{\mathbf{1}\,\bar h^{\top}}_{\text{均值（秩 1）}}+\underbrace{H_{\perp}}_{\text{差异（被逐层压缩）}}\]
   <p class="reveal">行随机矩阵满足 \(A\mathbf{1}=\mathbf{1}\)，<b>原样保留均值方向</b>；差异方向按次主特征值 \(|\lambda_2|\le1\) 逐层压缩。\(L\) 层后差异能量 \(\approx|\lambda_2|^L\cdot(\text{初始差异})\)，崩塌发生在它降到阈值 \(\delta\) 之下时：</p>
   \[L^{\star}\;\sim\;\frac{\log\!\left(\sum_{k\ge2}\sigma_k^2/\,\delta\right)}{\log(1/|\lambda_2|)}\]
 
   <div class="box reveal">
-    <div class="lbl">推荐同时压低分子、放大分母</div>
+    <div class="lbl">推荐场景同时压低分子、放大分母</div>
     <ul style="margin:6px 0;padding-left:20px;">
       <li><b>分子小（推荐独有）</b>：低秩输入的差异能量 \(\sum_{k\ge2}\sigma_k^2\) 极小，\(L^{\star}\) 被直接压低；</li>
-      <li><b>分母大（恶性循环）</b>：低秩 \(X\) 使 \(Q,K\) 同源 &rArr; \(A\to\tfrac1T\mathbf{1}\mathbf{1}^{\top}\)，\(|\lambda_2|\to0\)，\(\log(1/|\lambda_2|)\to\infty\)，\(L^{\star}\) 再次缩短。</li>
+      <li><b>分母大（自增强）</b>：低秩 \(H\) 使 \(Q,K\) 同源 &rArr; \(A\to\tfrac1T\mathbf{1}\mathbf{1}^{\top}\)，\(|\lambda_2|\to0\)，\(\log(1/|\lambda_2|)\to\infty\)，\(L^{\star}\) 进一步缩短。</li>
     </ul>
   </div>
 
   <div class="thm reveal">
-    <div class="lbl">恶性循环（SpecFormer 的正反向刻画）</div>
+    <div class="lbl">前向与反向：自增强回路（依 SpecFormer 的刻画）</div>
     <ul style="margin:6px 0;padding-left:20px;">
       <li><b>前向（低通滤波）</b>：坍缩的嵌入 \(H\) 生成低秩注意力矩阵 \(A\)。低秩 \(A\) 相当于<b>低通滤波器</b>——它仅沿主导方向平滑 token 表示，次奇异方向的差异被滤除，表示进一步退化；</li>
       <li><b>反向（梯度饥饿）</b>：低秩注意力把梯度投影到主导子空间，<b>次奇异方向遭受梯度饥饿</b>（gradient starvation），得不到有效更新，下一轮嵌入更坍缩。</li>
     </ul>
-    <p style="margin:6px 0;">SpecFormer 以 fractional effective rank 度量此过程，并论证前向低通与反向饥饿构成<b>互相加强的闭环</b>。其解法——谱整形 \(\widetilde\Sigma\)——直接作用于该闭环：打破前向的谱集中，使次奇异方向重新获得梯度。这一闭环亦解释了为何推荐 Transformer 在远浅于语言模型的层数即发生崩塌。</p>
+    <p style="margin:6px 0;">SpecFormer 以 fractional effective rank 度量此过程，并论证前向低通与反向饥饿构成<b>互相加强的回路</b>。其解法——谱整形 \(\widetilde\Sigma\)——直接作用于该回路：打破前向的谱集中，使次奇异方向重新获得梯度。这一回路亦为"推荐 Transformer 在远浅于语言模型的层数即发生崩塌"提供了一个一致的解释。</p>
   </div>
 
   <div class="figure reveal">
     <span class="tag red">图 3 · 前向–反向闭环</span>
     <div class="svgwrap">
-    <svg width="860" height="360" viewBox="0 0 860 360" role="img" aria-label="前向低通与反向梯度饥饿构成的恶性循环">
+    <svg width="860" height="360" viewBox="0 0 860 360" role="img" aria-label="前向低通与反向梯度饥饿构成的自增强回路">
       <defs>
         <marker id="lpR" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ff6b6b"/></marker>
         <marker id="lpO" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ea580c"/></marker>
@@ -635,7 +665,7 @@ a:hover{text-decoration:underline;}
       <!-- center loop badge -->
       <circle cx="430" cy="198" r="62" fill="rgba(180,83,9,.04)"/>
       <text x="430" y="174" font-size="20" fill="#b45309" text-anchor="middle">⟳</text>
-      <text x="430" y="200" font-size="14" font-weight="700" fill="#1a2332" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">恶性循环</text>
+      <text x="430" y="200" font-size="14" font-weight="700" fill="#1a2332" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">自增强回路</text>
       <text x="430" y="220" font-size="10.5" fill="#46526a" text-anchor="middle">σ₁ 的能量份额逐轮上升</text>
       <text x="430" y="238" font-size="10.5" fill="#46526a" text-anchor="middle">深度饱和提前至 O(1) 层</text>
 
@@ -644,7 +674,7 @@ a:hover{text-decoration:underline;}
         <rect x="58" y="128" width="284" height="132" rx="14" fill="#ffffff" stroke="rgba(15,23,42,.14)" stroke-width="1.5"/>
         <rect x="58" y="126" width="284" height="3.5" rx="1.75" fill="#ff6b6b" opacity=".85"/>
         <text x="200" y="158" font-size="13" font-weight="700" fill="#1a2332" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">H · token 嵌入矩阵</text>
-        <text x="200" y="182" font-size="11" fill="#46526a" text-anchor="middle">σ₁ ≫ σ_{k≥2}：能量集中于主导方向</text>
+        <text x="200" y="182" font-size="11" fill="#46526a" text-anchor="middle">σ₁ ≫ σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3">：能量集中于主导方向</tspan></text>
         <text x="200" y="201" font-size="11" fill="#46526a" text-anchor="middle">次奇异方向承载长尾 item 的差异</text>
         <text x="200" y="220" font-size="11" fill="#46526a" text-anchor="middle">初始即低秩 ⇒ 差异预算近零</text>
         <text x="200" y="244" font-size="9.5" fill="#7c8798" text-anchor="middle" letter-spacing="1.5">谱崩塌 · 表示侧</text>
@@ -662,10 +692,10 @@ a:hover{text-decoration:underline;}
       </g>
     </svg>
     </div>
-    <figcaption><b>前向–反向闭环（依 SpecFormer 的刻画改绘）。</b> 推荐输入因长尾与行为集中而先天低秩（触发条件）；前向通路上，坍缩的 H 生成低秩注意力 A，低通平均逐层滤除次奇异方向的差异；反向通路上，低秩 A 使梯度集中于主导子空间，次奇异方向得不到更新（梯度饥饿）。两条通路在 H 与 A 之间闭合为正反馈：σ₁ 的能量份额逐轮上升，有效秩在 \(O(1)\) 层内耗尽。打破闭环的切入点有二——重排谱（SpecFormer，须逐层 SVD），或移除制造集中的路径（§5–§6，无需谱分解）。</figcaption>
+    <figcaption><b>前向–反向回路（依 SpecFormer 的刻画改绘）。</b> 推荐输入因长尾与行为集中而先天低秩（触发条件，§3 命题）；前向通路上，坍缩的 H 生成低秩注意力 A，低通平均逐层滤除次奇异方向的差异；反向通路上，低秩 A 使梯度集中于主导子空间，次奇异方向得不到更新（梯度饥饿）。两条通路在 H 与 A 之间闭合为正反馈：σ₁ 的能量份额逐轮上升，有效秩在 \(O(1)\) 层内趋于耗尽。可行的切入点有二——重排谱（SpecFormer，须逐层 SVD），或移除制造集中的路径（§5–§6，无需谱分解）。</figcaption>
   </div>
 
-  <p class="reveal">但整体平均的视角仍停留在"秩 1 极限"的粗粒度描述上，它区分不了<b>是哪些路径</b>在加速这一过程。下一节我们把镜头对准相邻两层之间的路径结构。</p>
+  <p class="reveal">至此，谱崩塌已被刻画为"能量集中"的状态（§3 命题给出其数据根源，前向–反向回路给出其自增强方式），但这一描述仍是<b>整体</b>的：它没有指认<b>是哪些传播路径</b>在制造集中。下一节将分辨率下沉到相邻两层之间的<b>路径结构</b>。</p>
 </section>
 
 <!-- ==================== 4. 局部化 ==================== -->
@@ -673,41 +703,62 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">4</span> LOCALIZATION AND THE BACKTRACKING BIAS</div>
   <h2 class="title reveal d1">局部化：回溯路径给矩阵连乘带来的偏差<span class="sub">网络科学早就见过同一现象：主特征向量集中在少数 hub 上，谱质量被反复主导放大</span></h2>
 
-  <p class="lead reveal">"低通平均"描述整体混合，但不区分路径。网络科学中有一个平行的现象：当图中存在高度数 hub 时，邻接矩阵的<b>主特征向量会局部化</b>在 hub 及其邻域上——谱质量集中到少数节点，即所谓的<b>局部化（localization）</b>（Martin et al. 2014；Newman 2013）。其根源是一个明确的机制：</p>
+  <p class="lead reveal">谱崩塌刻画了"能量集中在哪"，但没有回答"是哪些传播路径制造了集中"。回答后一问需要更细的分辨率——<b>路径</b>。我们先在一个具体的两步例子上建立直觉，再从组合、概率、谱三个角度给出同一现象的等价刻画，最后统一到全文记号。</p>
 
-  <div class="thm reveal">
-    <div class="lbl">机制 · 矩阵幂的路径计数偏差</div>
-    <p style="margin:6px 0;">邻接矩阵的幂 \((A^2)_{ij}\) 计数从 \(i\) 到 \(j\) 的两步路径。其中形如 \(i\to j\to i\) 的路径回到原点，被重复计入、且不携带跨 token 的新信息。这类<b>回溯路径</b>在 hub 上密集存在，使 hub 及其邻域在矩阵幂中获得虚高的权重，主奇异向量被一次次放大，最终局部化。</p>
-    \[(A^2)_{ij}=\sum_k A_{ik}A_{kj}=\underbrace{\sum_{k\ne i}A_{ik}A_{ki}\,\delta_{ij}}_{\text{回溯（对角）}}+\underbrace{\sum_{k}A_{ik}A_{kj}\,\mathbf{1}_{k\ne i}}_{\text{前向（跨 token）}}\]
+  <div class="box reveal">
+    <div class="lbl">一个最小的例子</div>
+    <p style="margin:4px 0;">注意力是加权平均，深度的意义在于<b>跨 token 的多步汇聚</b>。为此考察两步路径——从一个 token 出发、经中间 token 到达另一 token——并比较其中的两类：</p>
+    <ul style="margin:6px 0;padding-left:20px;">
+      <li><b>前向路径</b> \(i\to j\to k\)（\(k\ne i\)）：信息从 \(i\) 经 \(j\) 到达<b>第三个</b> token \(k\)——这是注意力的本意：跨 token 的信息汇聚；</li>
+      <li><b>回溯路径</b> \(i\to j\to i\)：信息从 \(i\) 到 \(j\)，随即<b>原路返回</b>。两步之后，每个 token 看到的仍是自己（放大了的自己）——跨 token 的信息传递实际上没有发生。</li>
+    </ul>
+    <p style="margin:4px 0;">问题在于：矩阵乘法 \(A_\ell A_{\ell-1}\) 对这两类路径<b>一视同仁</b>。回溯路径的权重恰好落在乘积的对角元上，它逐层给"自己看自己"加权，却不搬运任何新信息。当这类路径在少数 hub token 上密集出现时，集中便被制造出来。</p>
   </div>
 
-  <p class="reveal">注意力矩阵连乘 \(A_\ell A_{\ell-1}\) 遇到完全相同的结构：其中有一类路径，第 \(\ell-1\) 层从 \(i\) 走到 \(j\)，第 \(\ell\) 层又从 \(j\) 回到 \(i\)——走了两步，回到原点，我们称之为<b>回溯（backtrack）</b>。定义其质量：</p>
+  <div class="thm reveal d1">
+    <div class="lbl">角度一 · 组合（路径计数）</div>
+    <p style="margin:6px 0;">两步算子的元素 \((A_\ell A_{\ell-1})_{ik}=\sum_j A_{\ell,ij}A_{\ell-1,jk}\) 是所有两步路径 \(i\to j\to k\) 的权重和。把 \(k=i\) 的项（即回到起点的回溯路径）单独取出，得到严格分解：</p>
+    \[(A_\ell A_{\ell-1})_{ik}=\underbrace{\mathbf 1_{k=i}\sum_{j\ne i}A_{\ell,ij}A_{\ell-1,ji}}_{\text{回溯（对角）}}\;+\;\underbrace{\sum_{j}A_{\ell,ij}A_{\ell-1,jk}\,\mathbf 1_{k\ne i}}_{\text{前向（跨 token）}}\]
+    <p style="margin:6px 0;">左项只出现在对角线上：回溯是两步算子中<b>唯一</b>回到起点的部分。</p>
+  </div>
+
+  <div class="thm reveal d2">
+    <div class="lbl">角度二 · 概率（随机游走）</div>
+    <p style="margin:6px 0;">把行随机的 \(A_\ell\) 看作随机游走的转移矩阵：质量从 token \(i\) 出发，两步后到达 \(k\)。回溯对应"走出去又原路返回"的样本——这类样本对"\(i\) 能汇聚到哪些他人信息"的期望没有贡献，却反复把质量送回出发点。被众多 token 关注的 hub（热门 item、高频类目）正是回返最密集的位置：质量在 hub 邻域内往返，<b>传播的有效半径没有扩大，局部质量却在上升</b>。</p>
+  </div>
+
+  <div class="thm reveal d3">
+    <div class="lbl">角度三 · 谱（局部化）</div>
+    <p style="margin:6px 0;">网络科学对同一现象有成熟的谱表述：当图中存在高度数 hub 时，邻接矩阵的<b>主特征向量局部化</b>在 hub 及其邻域上——谱质量集中到少数节点（Martin et al. 2014；Newman 2013）。其机制恰是角度一：hub 上的回溯路径使矩阵幂获得虚高权重，主特征向量被逐次放大。§3 的"奇异谱集中"与这里的"特征向量局部化"是同一现象的两套记号——一个写在 \(\Sigma\) 上，一个写在特征向量 \(v\) 上。</p>
+  </div>
+
+  <p class="reveal">三个角度合起来，给出全文使用的统一定义（记号与 §2 的表一致）：</p>
 
   <div class="box gold reveal">
-    <div class="lbl">回溯质量</div>
-    \[b_{\ell,i}=\sum_{j\ne i}A_{\ell,ij}\,A_{\ell-1,ji},\qquad
-      R_\ell=\mathrm{OffDiag}\!\left(A_\ell\odot A_{\ell-1}^{\top}\right),\qquad
-      \boldsymbol b_\ell=R_\ell\,\mathbf 1\]
-    <p style="margin:4px 0;">\(A_\ell\odot A_{\ell-1}^{\top}\) 在位置 \((i,j)\) 记录"第 \(\ell\) 层关注 \(j\)"与"第 \(\ell-1\) 层 \(j\) 关注 \(i\)"的乘积——一条互反边对的回溯强度。扣除平凡自注意力后按行求和，得到 token \(i\) 的两步回返总质量 \(b_{\ell,i}\)。于是两步算子被严格分解为</p>
-    \[P_\ell=D_\ell+C_\ell,\qquad D_\ell=\operatorname{Diag}(\boldsymbol b_\ell),\qquad C_\ell=P_\ell-D_\ell\]
+    <div class="lbl">定义 · 两步算子、回溯质量与非回溯部分</div>
+    \[\Pi_\ell=A_\ell A_{\ell-1},\qquad
+      b_{\ell,i}=(\Pi_\ell)_{ii}=\sum_{j\ne i}A_{\ell,ij}\,A_{\ell-1,ji},\qquad
+      D_\ell=\operatorname{Diag}(\boldsymbol b_\ell)\]
+    \[N_\ell\;=\;\Pi_\ell-D_\ell\qquad\text{（非回溯部分：仅保留 }k\ne i\text{ 的前向路径）}\]
+    <p style="margin:4px 0;">\(b_{\ell,i}\) 即 token \(i\) 的两步回返总质量；工程上按 \(\boldsymbol b_\ell=\mathrm{OffDiag}(A_\ell\odot A_{\ell-1}^{\top})\,\mathbf 1\) 计算——\(A_\ell\odot A_{\ell-1}^{\top}\) 在位置 \((i,j)\) 记录"第 \(\ell\) 层 \(i\) 关注 \(j\)"与"第 \(\ell-1\) 层 \(j\) 关注 \(i\)"的乘积，即互相对的强度。在固定图上（\(A_\ell=A=A^\top\)、无自环），上式退化为网络科学中熟知的 degree-two 非回溯形式 \(A^2-D\)，其中 \(D=\operatorname{Diag}(A^2)\)（Hashimoto 1989；Krzakala et al. 2013）。</p>
   </div>
 
   <div class="thm reveal">
-    <div class="lbl">机制一 · 回溯不创造新通道</div>
-    <p style="margin:6px 0;">分解后，\(D_\ell X=[b_{\ell,1}X_1;\dots;b_{\ell,T}X_T]\) 仅对既有 token 方向施加逐点增益，<b>不引入任何跨 token 通道</b>；跨 token 的信息搬运全部由 \(C_\ell\) 承担。若 \(\boldsymbol b_\ell\) 在少数 hub 上显著偏大，连续传播将反复放大这些位置——总能量守恒乃至局部增长，但<b>归一化奇异谱向少数方向集中</b>，有效秩下降显著加速。</p>
+    <div class="lbl">性质一 · 回溯不创造新通道</div>
+    <p style="margin:6px 0;">\(D_\ell\) 是对角矩阵，\(D_\ell H=[b_{\ell,1}H_1;\dots;b_{\ell,T}H_T]\) 仅对既有 token 方向施加逐点增益，<b>不引入任何跨 token 通道</b>；跨 token 的信息搬运全部由 \(N_\ell\) 承担。若 \(\boldsymbol b_\ell\) 在少数 hub 上显著偏大，连续传播将反复放大这些位置——总能量守恒乃至局部增长，但<b>归一化奇异谱向少数方向集中</b>，有效秩的下降被加速。</p>
   </div>
 
   <div class="thm gold reveal d1">
-    <div class="lbl">机制二 · hub 回溯对应特征向量局部化</div>
-    <p style="margin:6px 0;">Martin et al. (2014, arXiv:1401.5093) 在"稀疏、局部树状随机图 + 单一 hub"模型里给出可计算阈值。设背景平均度 \(c\)、hub 期望度 \(d\)。背景模态与 hub 模态近似为</p>
+    <div class="lbl">性质二 · hub 局部化的定量阈值（Martin et al. 2014, arXiv:1401.5093）</div>
+    <p style="margin:6px 0;">在"稀疏、局部树状随机图 + 单一 hub"模型中，设背景平均度 \(c\)、hub 期望度 \(d\)，背景模态与 hub 模态的特征值近似为</p>
     \[\lambda_{\mathrm{bulk}}\simeq c+1,\qquad \lambda_{\mathrm{hub}}=\frac{d}{\sqrt{d-c}},\qquad
       \boxed{\,d>c(c+1)\;\Rightarrow\;\text{hub 模态越过背景谱}\,}\]
-    <p style="margin:6px 0;">越过阈值后，局部化是<b>定量的</b>：hub 特征向量质量 \(v_h^2=\frac{d-2c}{2d-2c}=O(1)\) 集中于 hub 自身，其邻居各承担 \(v_n^2\approx\frac1{d-c}\)，其余节点按 \(O(1/n)\) 消失；逆参与率 \(\mathrm{IPR}=\sum_k v_k^4\) 由背景的 \(O(1/n)\) 升至 \(O(1)\)。这正是 SpecFormer 所述<b>谱崩塌在特征向量层面的等价表述</b>：输入侧"首个奇异值独占能量"，对应图侧"主特征向量局部化于 hub"——<b>同一现象的两套记号</b>，一个写在 \(\Sigma\) 上，一个写在 \(V\) 上。</p>
+    <p style="margin:6px 0;">越过阈值后，局部化是<b>定量的</b>：hub 特征向量质量 \(v_h^2=\frac{d-2c}{2d-2c}=O(1)\) 集中于 hub 自身，其邻居各承担 \(v_n^2\approx\frac1{d-c}\)，其余节点按 \(O(1/n)\) 消失；逆参与率 \(\mathrm{IPR}=\sum_k v_k^4\) 由背景的 \(O(1/n)\) 升至 \(O(1)\)。需要说明：该阈值在稀疏随机图上导出，注意力图稠密、加权、随层变化，阈值本身不可直接移植；我们引用的是其<b>机制</b>——回溯密集处产生脱离背景谱的局部化模态。</p>
   </div>
 
   <div class="thm reveal">
-    <div class="lbl">机制三 · 局部化 = 谱崩塌的"路径源头"</div>
-    <p style="margin:6px 0;">将两边的记号对齐：SpecFormer 的"谱集中" \(\sigma_1\gg\sigma_{k\ge2}\)，正是 Martin 模型中 hub 模态越过背景谱 \((d>c(c+1))\) 后的主特征向量局部化。区别仅在<b>作用对象</b>——SpecFormer 直接整形 \(\Sigma(H)\)（作用于表示矩阵本身），而局部化视角将同一现象<b>归因于图结构</b>：高回溯质量的 hub 是主导方向的路径级来源。于是问题由"谱已集中，如何重排"转变为"<b>何种路径制造了集中，能否直接移除</b>"。这一转变为下一节构造非回溯算子提供了动机。</p>
+    <div class="lbl">性质三 · 从"重排谱"到"移除路径"</div>
+    <p style="margin:6px 0;">将两边的记号对齐：SpecFormer 的"谱集中" \(\sigma_1\gg\sigma_{k\ge2}\)，对应 Martin 模型中 hub 模态越过背景谱 \((d>c(c+1))\) 后的主特征向量局部化。区别在<b>作用对象</b>——SpecFormer 直接整形 \(\Sigma(H)\)（作用于表示矩阵本身），而路径视角将同一现象<b>归因于图结构</b>：高回溯质量 \(b_{\ell,i}\) 的 hub 是主导方向的路径级来源。于是问题由"谱已集中，如何重排"转变为"<b>何种路径制造了集中，能否直接移除</b>"。这一转化为 §5 构造非回溯算子提供了动机。</p>
   </div>
 
   <div class="figure reveal">
@@ -737,8 +788,8 @@ a:hover{text-decoration:underline;}
       <circle r="6.5" fill="#ff6b6b">
         <animateMotion dur="1.3s" begin="0.65s" repeatCount="indefinite" path="M280 130 L130 130"/>
       </circle>
-      <text x="205" y="215" font-size="11.5" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">b_{ℓ,i} = Σ_{j≠i} A_{ℓ,ij}·A_{ℓ−1,ji}</text>
-      <text x="205" y="234" font-size="11" fill="#6b7280" text-anchor="middle">第 ℓ−1 层去 j，第 ℓ 层又回来：原地空转</text>
+      <text x="205" y="215" font-size="11.5" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">b<tspan dy="3" font-size="8.5">ℓ,i</tspan><tspan dy="-3"> = Σ</tspan><tspan dy="3" font-size="8.5">j≠i</tspan><tspan dy="-3"> A</tspan><tspan dy="3" font-size="8.5">ℓ,ij</tspan><tspan dy="-3">·A</tspan><tspan dy="3" font-size="8.5">ℓ−1,ji</tspan></text>
+      <text x="205" y="234" font-size="11" fill="#6b7280" text-anchor="middle">第 ℓ−1 层去 j，第 ℓ 层原路返回：无跨 token 传递</text>
 
       <!-- right: hub localization -->
       <text x="600" y="28" font-size="13" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">(b) hub 回溯集中 → 局部化</text>
@@ -854,29 +905,28 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="box reveal">
-    <div class="lbl">血统与边界</div>
-    <p style="margin:4px 0;">TDA 继承的是非回溯理论的<b>路径级构造</b>（degree-two 的 \(A^2-D\)），而非固定图上完整的 Ihara–Bass 谱结论。注意力图稠密、加权、有向且随层变化，不存在现成的完整谱等价。TDA 是 degree-two 截断：移除可明确识别的回溯项；其去局部化与保秩效果，仍需由注意力乘积的 IPR 与奇异谱实验确认。此外，Martin et al. (2014) 指出非回溯矩阵并非对所有结构免疫——例如在团（clique）上仍可能局部化；在注意力语境下，这意味着"整组 token 互相高度关注"的稠密子结构是 TDA 不触及的、可能保留的另一种集中来源。与 SpecFormer 的分工亦由此界定：<b>谱整形重排全部奇异值，TDA 仅剔除回溯路径</b>——前者作用于谱（须逐层 SVD），后者作用于路径（仅 Hadamard 积与对角运算）。</p>
+    <div class="lbl">理论来源与适用边界</div>
+    <p style="margin:4px 0;">TDA 继承的是非回溯理论的<b>路径级构造</b>（degree-two 的 \(A^2-D\)），而非固定图上完整的 Ihara–Bass 谱结论。注意力图稠密、加权、有向且随层变化，不存在现成的完整谱等价。应将 TDA 理解为 degree-two 截断：移除可明确识别的回溯项；其去局部化与保秩效果，仍需由注意力乘积的 IPR 与奇异谱实验确认（§7 给出初步观测）。此外，Martin et al. (2014) 指出非回溯矩阵并非对所有结构免疫——例如在团（clique）上仍可能局部化；在注意力语境下，这意味着"整组 token 互相高度关注"的稠密子结构是 TDA 不触及的、可能残留的另一种集中来源。与 SpecFormer 的分工亦由此界定：<b>谱整形重排全部奇异值，TDA 仅剔除回溯路径</b>——前者作用于谱（须逐层 SVD），后者作用于路径（仅 Hadamard 积与对角运算）。</p>
   </div>
 </section>
 
 <!-- ==================== 6. TDA ==================== -->
 <section id="sec6" class="act">
   <div class="kick reveal"><span class="actnum">6</span> NON-BACKTRACKING ATTENTION</div>
-  <h2 class="title reveal d1">TDA：把回溯质量门控地减掉<span class="sub">非回溯注意力（TDA）——一个插件，只改注意力消息，什么都不动</span></h2>
+  <h2 class="title reveal d1">TDA：非回溯注意力的门控实现<span class="sub">仅修改注意力消息，其余组件保持不变</span></h2>
 
-  <p class="lead reveal">将上述思路落地为工程实现：TDA 仅修改<b>注意力消息</b>，tokenization、共享 QKV、残差、FFN、预测头均保持不变。对每个头 \(h\)，利用缓存的相邻层注意力权重构造互反矩阵与回溯质量：</p>
-  \[R_{\ell,h}=\mathrm{OffDiag}\!\big(A_{\ell,h}\odot A_{\ell-1,h}^{\top}\big),\quad
-    \boldsymbol r_{\ell,h}=R_{\ell,h}\,\mathbf 1,\quad
-    D_{\ell,h}=\mathrm{Diag}(\boldsymbol r_{\ell,h})\]
+  <p class="lead reveal">将上述思路落实为工程实现：TDA 仅修改<b>注意力消息</b>，tokenization、共享 QKV、残差、FFN、预测头均保持不变。对每个头 \(h\)，利用缓存的相邻层注意力权重，按 §4 的定义构造回溯质量：</p>
+  \[D_{\ell,h}=\operatorname{Diag}\!\big(\mathrm{OffDiag}(A_{\ell,h}\odot A_{\ell-1,h}^{\top})\,\mathbf 1\big),\qquad
+    \bar M_{\ell-1,h}=A_{\ell-1,h}\,\big(\bar H_{\ell-1}W^{V}_{\ell-1,h}\big)\]
 
   <div class="box grn reveal">
     <div class="lbl">TDA 头消息</div>
-    \[\boxed{\;\widetilde M_{\ell,h}\;=\;\underbrace{A_{\ell,h}\,V_{\ell,h}}_{\text{标准消息}}\;-\;\underbrace{\beta_{\ell,h}\,D_{\ell,h}\,P_{\ell,h}\,\bar H_{\ell-1}}_{\text{门控回溯修正}}\;}\]
-    <p style="margin:4px 0;">其中 \(\bar H_{\ell-1}\) 是上一层的归一化历史状态；\(P_{\ell,h}\) 把它投影到 head 维（经济实现<b>复用上一层 \(W_V\)，零额外参数</b>）；\(\beta_{\ell,h}=\sigma(b_{\ell,h})\in[0,1]\) 是每头每层的<b>可学门控</b>，初始化近 0——训练从"未改动的 backbone"起步，修正只在数据真正受益处生长。第 1 层无 \(A_0\) 可用，保持标准注意力。</p>
+    \[\boxed{\;\widetilde M_{\ell,h}\;=\;\underbrace{A_{\ell,h}\,V_{\ell,h}}_{\text{标准消息}}\;-\;\underbrace{\beta_{\ell,h}\,D_{\ell,h}\,\bar M_{\ell-1,h}}_{\text{门控回溯修正}}\;}\]
+    <p style="margin:4px 0;">其中 \(\bar M_{\ell-1,h}\) 是缓存的上一层注意力消息（投影<b>复用上一层 \(W^V\)，零额外参数</b>）；\(\beta_{\ell,h}=\mathrm{Sigmoid}(a_{\ell,h})\in[0,1]\) 是每头每层的<b>可学门控</b>，初始化近 0——训练自"未改动的骨干"起步，修正幅度由数据决定。第 1 层无 \(A_0\) 可用，保持标准注意力。</p>
   </div>
 
-  <h3 class="reveal">对角算子的作用：逐格的解读</h3>
-  <p class="reveal">为何修正项取形如 \(D_{\ell,h}P_{\ell,h}\bar H_{\ell-1}\)，而非直接作用于本层消息？逐项考察：\(\beta_{\ell,h}\) 为标量门控，\(D_{\ell,h}\) 为纯对角矩阵，\(P_{\ell,h}\bar H_{\ell-1}\) 为上一层表示的投影。整体效果是<b>逐 token 施加一个系数</b>——不搬运任何跨 token 信息，仅按回溯质量缩放每个 token 的历史状态。这与第 4 节的机制一完全一致：回溯不创造新通道，故只应作为逐点的增益加以处理。</p>
+  <h3 class="reveal">对角修正的逐项解读</h3>
+  <p class="reveal">为何修正项取形如 \(D_{\ell,h}\bar M_{\ell-1,h}\)，而非直接作用于本层消息？逐项考察：\(\beta_{\ell,h}\) 为标量门控，\(D_{\ell,h}\) 为纯对角矩阵，\(\bar M_{\ell-1,h}\) 为已缓存的上一层消息。整体效果是<b>逐 token 施加一个系数</b>——不搬运任何跨 token 信息，仅按回溯质量缩放每个 token 的历史状态。这与 §4 的性质一一致：回溯不创造新通道，故只应作为逐点的增益加以处理。</p>
 
   <div class="figure reveal">
     <span class="tag grn">图 6 · 修正的矩阵观</span>
@@ -921,7 +971,7 @@ a:hover{text-decoration:underline;}
 
   <div class="box cy reveal">
     <div class="lbl">实现 · 每块三步，全部低阶</div>
-    <p style="margin:4px 0;">把上面的代数落成可执行逻辑（伪代码，\(@\) 为矩阵乘法，逐头独立）：</p>
+    <p style="margin:4px 0;">将上述代数落实为可执行逻辑（伪代码，\(@\) 为矩阵乘法，逐头独立）：
     <div class="codeblock">
 <span class="c"># ── 标准注意力（每块已有，不计入新增）──</span><br>
 <span class="kw">def</span> <span class="fn">attention</span>(H_l):<br>
@@ -961,7 +1011,7 @@ a:hover{text-decoration:underline;}
   </div>
   <div class="thm reveal d2">
     <div class="lbl">命题 3 · 有界性</div>
-    <p style="margin:6px 0;">若 \(A_\ell,A_{\ell-1}\) 非负行随机，则 \(0\le r_{\ell,i}\le1\)，且 \(\lVert\beta_\ell D_\ell X\rVert_{\infty,2}\le\lVert X\rVert_{\infty,2}\)。修正<b>不会放大单行范数</b>——它是压缩而非放大，数值上是安全的。</p>
+    <p style="margin:6px 0;">若 \(A_\ell,A_{\ell-1}\) 非负行随机，则 \(0\le b_{\ell,i}\le1\)，且 \(\lVert\beta_\ell D_\ell H\rVert_{\infty,2}\le\lVert H\rVert_{\infty,2}\)。修正<b>不会放大单行范数</b>——数值上是收缩的。</p>
   </div>
   <div class="thm grn reveal d3">
     <div class="lbl">命题 4 · 因果 no-op</div>
@@ -972,7 +1022,7 @@ a:hover{text-decoration:underline;}
 <!-- ==================== 7. 观测结论 ==================== -->
 <section id="sec7" class="act">
   <div class="kick reveal"><span class="actnum">7</span> EMPIRICAL OBSERVATION</div>
-  <h2 class="title reveal d1">观测：TDA 让崩塌更慢<span class="sub">以行相似度与有效秩两个量纲，度量注意力矩阵随深度的退化速率</span></h2>
+  <h2 class="title reveal d1">初步观测：移除回溯后，退化放缓<span class="sub">以行相似度与有效秩两个量纲，度量注意力矩阵随深度的退化速率</span></h2>
 
   <p class="lead reveal">若上述路径机制成立，则存在一个可检验的预测：移除回溯路径后，注意力矩阵（及其跨层乘积）的退化应被<b>减缓</b>——各行不再快速地趋向一致，有效秩不再快速地滑向 1。以下给出以 <b>row similarity</b> 与 <b>effective rank</b> 为度量的对比观测。</p>
 
@@ -1055,7 +1105,7 @@ a:hover{text-decoration:underline;}
 </section>
 
 <div class="foot">
-  <span class="badge">Make it Deeper</span>
+  <span class="badge">Take it Longer · Make it Deeper</span>
   <span>本文为方法层面的图示化导引；数值结果需以正式实验替换。文中阈值与定理均标注来源，转引需谨慎。</span>
 </div>
 

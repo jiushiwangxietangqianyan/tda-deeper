@@ -277,15 +277,15 @@ a:hover{text-decoration:underline;}
   <svg width="960" height="400" viewBox="0 0 960 400" role="img" aria-label="回溯传播与非回溯传播对比动画">
     <defs>
       <radialGradient id="heroGlowL" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#ff6b6b" stop-opacity=".18"/><stop offset="100%" stop-color="#ff6b6b" stop-opacity="0"/>
+        <stop offset="0%" stop-color="#C44E52" stop-opacity=".18"/><stop offset="100%" stop-color="#C44E52" stop-opacity="0"/>
       </radialGradient>
       <radialGradient id="heroGlowR" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#3ddc97" stop-opacity=".16"/><stop offset="100%" stop-color="#3ddc97" stop-opacity="0"/>
+        <stop offset="0%" stop-color="#55A868" stop-opacity=".16"/><stop offset="100%" stop-color="#55A868" stop-opacity="0"/>
       </radialGradient>
-      <marker id="arrRed" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-        <path d="M0,0 L8,4 L0,8 Z" fill="#ff6b6b"/></marker>
-      <marker id="arrGrn" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-        <path d="M0,0 L8,4 L0,8 Z" fill="#3ddc97"/></marker>
+      <marker id="arrRed" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#C44E52"/></marker>
+      <marker id="arrGrn" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+        <path d="M0,0 L6,3 L0,6 Z" fill="#55A868"/></marker>
     </defs>
 
     <rect x="0" y="0" width="960" height="400" rx="18" fill="#f4f6f9"/>
@@ -293,11 +293,11 @@ a:hover{text-decoration:underline;}
     <circle cx="720" cy="200" r="180" fill="url(#heroGlowR)"/>
 
     <!-- left labels -->
-    <text x="240" y="46" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">回溯式传播</text>
+    <text x="240" y="46" font-size="15" font-weight="700" fill="#C44E52" text-anchor="middle" font-family="Space Grotesk">回溯式传播</text>
     <text x="240" y="66" font-size="11" fill="#6b7280" text-anchor="middle">质量沿 i → j → i 原路返回，不产生跨 token 传递</text>
 
     <!-- right labels -->
-    <text x="720" y="46" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">非回溯式传播</text>
+    <text x="720" y="46" font-size="15" font-weight="700" fill="#55A868" text-anchor="middle" font-family="Space Grotesk">非回溯式传播</text>
     <text x="720" y="66" font-size="11" fill="#6b7280" text-anchor="middle">信息沿 i → j → k 持续前向传递</text>
 
     <!-- center divider -->
@@ -308,31 +308,31 @@ a:hover{text-decoration:underline;}
     <!-- ============ LEFT: backtrack loop ============ -->
     <g>
       <!-- nodes i and j -->
-      <circle cx="150" cy="225" r="26" fill="#ffffff" stroke="#ff6b6b" stroke-width="2.5"/>
-      <text x="150" y="232" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">i</text>
-      <circle cx="330" cy="225" r="26" fill="#ffffff" stroke="#ff6b6b" stroke-width="2.5"/>
-      <text x="330" y="232" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">j</text>
+      <circle cx="150" cy="225" r="26" fill="#ffffff" stroke="#C44E52" stroke-width="1.8"/>
+      <text x="150" y="232" font-size="15" font-weight="700" fill="#C44E52" text-anchor="middle" font-family="Space Grotesk">i</text>
+      <circle cx="330" cy="225" r="26" fill="#ffffff" stroke="#C44E52" stroke-width="1.8"/>
+      <text x="330" y="232" font-size="15" font-weight="700" fill="#C44E52" text-anchor="middle" font-family="Space Grotesk">j</text>
       <!-- edge with double arrows -->
-      <line x1="176" y1="225" x2="304" y2="225" stroke="#ff6b6b" stroke-width="3" opacity=".6"
+      <line x1="176" y1="225" x2="304" y2="225" stroke="#C44E52" stroke-width="2" opacity=".6"
         marker-start="url(#arrRed)" marker-end="url(#arrRed)"/>
       <!-- oscillation arc -->
-      <path d="M150 262 Q240 296 330 262" fill="none" stroke="#ff6b6b" stroke-width="1.6" stroke-dasharray="5,5" opacity=".5">
+      <path d="M150 262 Q240 296 330 262" fill="none" stroke="#C44E52" stroke-width="1.6" stroke-dasharray="5,5" opacity=".5">
         <animate attributeName="stroke-dashoffset" from="0" to="20" dur="1s" repeatCount="indefinite"/>
       </path>
       <!-- particles bouncing (paths trimmed to node-circle edges so labels stay clear) -->
-      <circle r="7" fill="#ff6b6b">
+      <circle r="7" fill="#C44E52">
         <animateMotion dur="1.4s" repeatCount="indefinite" path="M176 225 L304 225"/>
         <animate attributeName="opacity" values=".9;.4;.9" dur="1.4s" repeatCount="indefinite"/>
       </circle>
-      <circle r="7" fill="#ff6b6b">
+      <circle r="7" fill="#C44E52">
         <animateMotion dur="1.4s" begin="0.7s" repeatCount="indefinite" path="M304 225 L176 225"/>
         <animate attributeName="opacity" values=".9;.4;.9" dur="1.4s" repeatCount="indefinite"/>
       </circle>
       <!-- trail glows -->
-      <circle r="14" fill="#ff6b6b" opacity=".16">
+      <circle r="14" fill="#C44E52" opacity=".16">
         <animateMotion dur="1.4s" begin="-0.25s" repeatCount="indefinite" path="M176 225 L304 225"/>
       </circle>
-      <circle r="14" fill="#ff6b6b" opacity=".16">
+      <circle r="14" fill="#C44E52" opacity=".16">
         <animateMotion dur="1.4s" begin="0.45s" repeatCount="indefinite" path="M304 225 L176 225"/>
       </circle>
     </g>
@@ -341,27 +341,27 @@ a:hover{text-decoration:underline;}
 
     <!-- ============ RIGHT: forward path ============ -->
     <g>
-      <circle cx="600" cy="225" r="26" fill="#ffffff" stroke="#3ddc97" stroke-width="2.5"/>
-      <text x="600" y="232" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">i</text>
-      <circle cx="735" cy="150" r="26" fill="#ffffff" stroke="#3ddc97" stroke-width="2.5"/>
-      <text x="735" y="157" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">j</text>
-      <circle cx="865" cy="225" r="26" fill="#ffffff" stroke="#3ddc97" stroke-width="2.5"/>
-      <text x="865" y="232" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">k</text>
-      <line x1="622" y1="220" x2="714" y2="160" stroke="#3ddc97" stroke-width="3" opacity=".65" marker-end="url(#arrGrn)"/>
-      <line x1="755" y1="160" x2="840" y2="218" stroke="#3ddc97" stroke-width="3" opacity=".65" marker-end="url(#arrGrn)"/>
+      <circle cx="600" cy="225" r="26" fill="#ffffff" stroke="#55A868" stroke-width="1.8"/>
+      <text x="600" y="232" font-size="15" font-weight="700" fill="#55A868" text-anchor="middle" font-family="Space Grotesk">i</text>
+      <circle cx="735" cy="150" r="26" fill="#ffffff" stroke="#55A868" stroke-width="1.8"/>
+      <text x="735" y="157" font-size="15" font-weight="700" fill="#55A868" text-anchor="middle" font-family="Space Grotesk">j</text>
+      <circle cx="865" cy="225" r="26" fill="#ffffff" stroke="#55A868" stroke-width="1.8"/>
+      <text x="865" y="232" font-size="15" font-weight="700" fill="#55A868" text-anchor="middle" font-family="Space Grotesk">k</text>
+      <line x1="622" y1="220" x2="714" y2="160" stroke="#55A868" stroke-width="2" opacity=".65" marker-end="url(#arrGrn)"/>
+      <line x1="755" y1="160" x2="840" y2="218" stroke="#55A868" stroke-width="2" opacity=".65" marker-end="url(#arrGrn)"/>
       <!-- forward particle stream (two edge-aligned subpaths; jump at node j reads as absorb/re-emit) -->
-      <circle r="7" fill="#3ddc97">
+      <circle r="7" fill="#55A868">
         <animateMotion dur="3s" repeatCount="indefinite" path="M622 220 L714 160 M756 161 L840 218"/>
         <animate attributeName="opacity" values=".95;.5;.95" dur="3s" repeatCount="indefinite"/>
       </circle>
-      <circle r="7" fill="#4cc9f0">
+      <circle r="7" fill="#4C72B0">
         <animateMotion dur="3s" begin="1s" repeatCount="indefinite" path="M622 220 L714 160 M756 161 L840 218"/>
       </circle>
-      <circle r="13" fill="#3ddc97" opacity=".15">
+      <circle r="13" fill="#55A868" opacity=".15">
         <animateMotion dur="3s" begin="-0.3s" repeatCount="indefinite" path="M622 220 L714 160 M756 161 L840 218"/>
       </circle>
       <!-- depth ladder on right -->
-      <g font-family="Space Grotesk" font-size="11" fill="#3ddc97">
+      <g font-family="Space Grotesk" font-size="11" fill="#55A868">
         <text x="600" y="300" text-anchor="middle">层 ℓ−1</text>
         <text x="735" y="108" text-anchor="middle">层 ℓ</text>
         <text x="865" y="300" text-anchor="middle">层 ℓ+1</text>
@@ -443,12 +443,12 @@ a:hover{text-decoration:underline;}
     <div class="svgwrap">
     <svg width="760" height="240" viewBox="0 0 760 240" role="img" aria-label="token 表示在连乘下坍缩为单点">
       <defs>
-        <radialGradient id="cl1" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#5f8dff"/><stop offset="100%" stop-color="#1f3a6e"/></radialGradient>
-        <radialGradient id="cl2" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#4cc9f0"/><stop offset="100%" stop-color="#155e86"/></radialGradient>
-        <radialGradient id="cl3" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#4c3a8a"/></radialGradient>
-        <radialGradient id="cl4" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#3ddc97"/><stop offset="100%" stop-color="#1d6e54"/></radialGradient>
-        <radialGradient id="cl5" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#f4c95d"/><stop offset="100%" stop-color="#8a6a1e"/></radialGradient>
-        <radialGradient id="cl6" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#ff6b6b"/><stop offset="100%" stop-color="#8a2626"/></radialGradient>
+        <radialGradient id="cl1" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#7B96C4"/><stop offset="100%" stop-color="#3A5378"/></radialGradient>
+        <radialGradient id="cl2" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#4C72B0"/><stop offset="100%" stop-color="#3A5878"/></radialGradient>
+        <radialGradient id="cl3" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#9C8CC2"/><stop offset="100%" stop-color="#5C5083"/></radialGradient>
+        <radialGradient id="cl4" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#55A868"/><stop offset="100%" stop-color="#3E6B51"/></radialGradient>
+        <radialGradient id="cl5" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#D8BC6A"/><stop offset="100%" stop-color="#8A7430"/></radialGradient>
+        <radialGradient id="cl6" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#C44E52"/><stop offset="100%" stop-color="#8A4448"/></radialGradient>
       </defs>
       <rect x="0" y="0" width="760" height="240" rx="12" fill="none"/>
       <line x1="240" y1="40" x2="240" y2="200" stroke="rgba(255,255,255,.06)"/>
@@ -483,14 +483,14 @@ a:hover{text-decoration:underline;}
       <circle cx="622" cy="120" r="20" fill="url(#cl1)" opacity=".8"/>
       <circle cx="638" cy="134" r="16" fill="url(#cl2)" opacity=".8"/>
       <circle cx="630" cy="120" r="8" fill="#1a2332" opacity=".5"/>
-      <text x="630" y="215" font-size="11" fill="#ff6b6b" text-anchor="middle">所有 token 塌成一点 → 秩 1</text>
+      <text x="630" y="215" font-size="11" fill="#C44E52" text-anchor="middle">所有 token 塌成一点 → 秩 1</text>
 
       <!-- arrows -->
       <g stroke="#8a93a3" stroke-width="1.6" fill="none">
         <path d="M208 128 L252 128" marker-end="url(#arr)" opacity=".8"/>
         <path d="M468 128 L512 128" marker-end="url(#arr)" opacity=".8"/>
       </g>
-      <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs>
+      <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#6b7280"/></marker></defs>
     </svg>
     </div>
     <figcaption><b>几何直觉。</b> token 表示为一组散布的点（高秩）；行随机连乘不断将其拉向质心；层数充分深时，各点重合为同一向量，矩阵秩退化为 1。Dong et al. (2021) 证明无残差时该收敛为双重指数速度。</figcaption>
@@ -527,7 +527,114 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">3</span> LOW-RANK SPECTRUM OF RECOMMENDATION INPUT</div>
   <h2 class="title reveal d1">推荐输入的低秩谱：奇异值集中，谱间隙大<span class="sub">机制相同，触发却提前：起始状态已不同</span></h2>
 
-  <p class="lead reveal">语言 token 位于连续平滑的语义流形上；推荐 token 则高度离散、异质且严重长尾——同一 item、创作者、类目或意图在一次请求的近期行为中反复出现。Cui et al. (2026, SpecFormer) 将其后果归纳为<b>谱崩塌（spectral collapse）</b>。为把这一概念说清楚，我们先给出它的形式化定义，再说明推荐数据为何天然触发它。</p>
+  <p class="lead reveal">语言 token 位于连续平滑的语义流形上；推荐 token 则高度离散、异质且严重长尾——同一 item、创作者、类目或意图在一次请求的近期行为中反复出现。Cui et al. (2026, SpecFormer) 将其后果归纳为<b>谱崩塌（spectral collapse）</b>。我们先从数据侧展示这一现象的来源，再给出它的形式化定义。</p>
+
+  <div class="figure reveal">
+    <span class="tag red">图 2 · 从交互数据到低秩输入</span>
+    <div class="svgwrap">
+    <svg width="880" height="290" viewBox="0 0 880 290" role="img" aria-label="用户物料二部交互、交互矩阵与行为序列 token 化">
+      <defs>
+        <marker id="panelArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8C8C8C"/></marker>
+      </defs>
+
+      <!-- panel titles -->
+      <text x="130" y="22" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">(a) 用户–物料交互</text>
+      <text x="395" y="22" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">(b) 交互矩阵 M</text>
+      <text x="675" y="22" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">(c) 行为序列 token 化</text>
+
+      <!-- (a) bipartite graph -->
+      <g stroke="#8C8C8C" stroke-width="1.1" opacity=".65">
+        <line x1="52" y1="76" x2="202" y2="58"/>
+        <line x1="52" y1="76" x2="202" y2="98"/>
+        <line x1="52" y1="76" x2="202" y2="180"/>
+        <line x1="52" y1="146" x2="202" y2="58"/>
+        <line x1="52" y1="146" x2="202" y2="138"/>
+        <line x1="52" y1="216" x2="202" y2="58"/>
+        <line x1="52" y1="216" x2="202" y2="222"/>
+      </g>
+      <g>
+        <circle cx="45" cy="76" r="12" fill="#55A868"/><text x="45" y="80" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">u₁</text>
+        <circle cx="45" cy="146" r="12" fill="#55A868"/><text x="45" y="150" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">u₂</text>
+        <circle cx="45" cy="216" r="12" fill="#55A868"/><text x="45" y="220" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">u₃</text>
+        <circle cx="215" cy="58" r="13" fill="#C44E52"/><text x="215" y="62" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">i₁</text>
+        <circle cx="215" cy="98" r="12" fill="#4C72B0"/><text x="215" y="102" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">i₂</text>
+        <circle cx="215" cy="138" r="12" fill="#4C72B0"/><text x="215" y="142" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">i₃</text>
+        <circle cx="215" cy="180" r="12" fill="#4C72B0"/><text x="215" y="184" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">i₄</text>
+        <circle cx="215" cy="222" r="12" fill="#4C72B0"/><text x="215" y="226" font-size="9" fill="#fff" text-anchor="middle" font-family="Inter, sans-serif">i₅</text>
+      </g>
+      <text x="130" y="256" font-size="10.5" fill="#6b7280" text-anchor="middle">头部物料 i₁ 连接全部用户（红）</text>
+      <text x="130" y="273" font-size="10.5" fill="#6b7280" text-anchor="middle">长尾物料仅零星出现</text>
+
+      <!-- arrow a->b -->
+      <line x1="262" y1="150" x2="288" y2="150" stroke="#8C8C8C" stroke-width="1.2" marker-end="url(#panelArr)"/>
+
+      <!-- (b) interaction matrix -->
+      <g>
+        <rect x="340" y="52" width="22" height="22" rx="3" fill="#C44E52" opacity=".9"/>
+        <rect x="366" y="52" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="392" y="52" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="418" y="52" width="22" height="22" rx="3" fill="#4C72B0" opacity=".85"/>
+        <rect x="340" y="78" width="22" height="22" rx="3" fill="#C44E52" opacity=".9"/>
+        <rect x="366" y="78" width="22" height="22" rx="3" fill="#4C72B0" opacity=".85"/>
+        <rect x="392" y="78" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="418" y="78" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="340" y="104" width="22" height="22" rx="3" fill="#C44E52" opacity=".9"/>
+        <rect x="366" y="104" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="392" y="104" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="418" y="104" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="444" y="52" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="444" y="78" width="22" height="22" rx="3" fill="#E5E9F0"/>
+        <rect x="444" y="104" width="22" height="22" rx="3" fill="#4C72B0" opacity=".85"/>
+      </g>
+      <g font-family="Inter, sans-serif" font-size="9" fill="#8C8C8C" text-anchor="middle">
+        <text x="351" y="142">i₁</text><text x="377" y="142">i₂</text><text x="403" y="142">i₃</text><text x="429" y="142">i₄</text><text x="455" y="142">i₅</text>
+        <text x="322" y="67">u₁</text><text x="322" y="93">u₂</text><text x="322" y="119">u₃</text>
+      </g>
+      <text x="395" y="172" font-size="10.5" fill="#6b7280" text-anchor="middle">列 i₁ 稠密：结构集中于头部</text>
+      <text x="395" y="189" font-size="10.5" fill="#6b7280" text-anchor="middle">长尾列近乎全零</text>
+
+      <!-- arrow b->c -->
+      <line x1="500" y1="150" x2="526" y2="150" stroke="#8C8C8C" stroke-width="1.2" marker-end="url(#panelArr)"/>
+
+      <!-- (c) sequence -> token matrix -->
+      <g font-family="Inter, sans-serif" font-size="9" fill="#fff" text-anchor="middle">
+        <rect x="548" y="42" width="30" height="18" rx="4" fill="#C44E52"/><text x="563" y="55">i₁</text>
+        <rect x="582" y="42" width="30" height="18" rx="4" fill="#4C72B0"/><text x="597" y="55">i₂</text>
+        <rect x="616" y="42" width="30" height="18" rx="4" fill="#C44E52"/><text x="631" y="55">i₁</text>
+        <rect x="650" y="42" width="30" height="18" rx="4" fill="#4C72B0"/><text x="665" y="55">i₃</text>
+        <rect x="684" y="42" width="30" height="18" rx="4" fill="#C44E52"/><text x="699" y="55">i₁</text>
+        <rect x="718" y="42" width="30" height="18" rx="4" fill="#4C72B0"/><text x="733" y="55">i₄</text>
+        <rect x="752" y="42" width="30" height="18" rx="4" fill="#4C72B0"/><text x="767" y="55">i₅</text>
+        <rect x="786" y="42" width="30" height="18" rx="4" fill="#C44E52"/><text x="801" y="55">i₁</text>
+      </g>
+      <text x="826" y="55" font-size="9.5" fill="#8C8C8C" font-family="Inter, sans-serif">→ H¹</text>
+
+      <!-- H matrix rows tinted by token identity -->
+      <g>
+        <rect x="600" y="82" width="18" height="18" rx="3" fill="#C44E52" opacity=".5"/><rect x="620" y="82" width="18" height="18" rx="3" fill="#C44E52" opacity=".38"/><rect x="640" y="82" width="18" height="18" rx="3" fill="#C44E52" opacity=".26"/><rect x="660" y="82" width="18" height="18" rx="3" fill="#C44E52" opacity=".16"/><rect x="680" y="82" width="18" height="18" rx="3" fill="#C44E52" opacity=".1"/>
+        <rect x="600" y="102" width="18" height="18" rx="3" fill="#4C72B0" opacity=".5"/><rect x="620" y="102" width="18" height="18" rx="3" fill="#4C72B0" opacity=".38"/><rect x="640" y="102" width="18" height="18" rx="3" fill="#4C72B0" opacity=".26"/><rect x="660" y="102" width="18" height="18" rx="3" fill="#4C72B0" opacity=".16"/><rect x="680" y="102" width="18" height="18" rx="3" fill="#4C72B0" opacity=".1"/>
+        <rect x="600" y="122" width="18" height="18" rx="3" fill="#C44E52" opacity=".5"/><rect x="620" y="122" width="18" height="18" rx="3" fill="#C44E52" opacity=".38"/><rect x="640" y="122" width="18" height="18" rx="3" fill="#C44E52" opacity=".26"/><rect x="660" y="122" width="18" height="18" rx="3" fill="#C44E52" opacity=".16"/><rect x="680" y="122" width="18" height="18" rx="3" fill="#C44E52" opacity=".1"/>
+        <rect x="600" y="142" width="18" height="18" rx="3" fill="#4C72B0" opacity=".5"/><rect x="620" y="142" width="18" height="18" rx="3" fill="#4C72B0" opacity=".38"/><rect x="640" y="142" width="18" height="18" rx="3" fill="#4C72B0" opacity=".26"/><rect x="660" y="142" width="18" height="18" rx="3" fill="#4C72B0" opacity=".16"/><rect x="680" y="142" width="18" height="18" rx="3" fill="#4C72B0" opacity=".1"/>
+        <rect x="600" y="162" width="18" height="18" rx="3" fill="#C44E52" opacity=".5"/><rect x="620" y="162" width="18" height="18" rx="3" fill="#C44E52" opacity=".38"/><rect x="640" y="162" width="18" height="18" rx="3" fill="#C44E52" opacity=".26"/><rect x="660" y="162" width="18" height="18" rx="3" fill="#C44E52" opacity=".16"/><rect x="680" y="162" width="18" height="18" rx="3" fill="#C44E52" opacity=".1"/>
+        <rect x="600" y="182" width="18" height="18" rx="3" fill="#4C72B0" opacity=".5"/><rect x="620" y="182" width="18" height="18" rx="3" fill="#4C72B0" opacity=".38"/><rect x="640" y="182" width="18" height="18" rx="3" fill="#4C72B0" opacity=".26"/><rect x="660" y="182" width="18" height="18" rx="3" fill="#4C72B0" opacity=".16"/><rect x="680" y="182" width="18" height="18" rx="3" fill="#4C72B0" opacity=".1"/>
+      </g>
+      <text x="588" y="96" font-size="9" fill="#8C8C8C" text-anchor="end" font-family="Inter, sans-serif">i₁</text>
+      <text x="588" y="116" font-size="9" fill="#8C8C8C" text-anchor="end" font-family="Inter, sans-serif">i₂</text>
+      <text x="588" y="136" font-size="9" fill="#8C8C8C" text-anchor="end" font-family="Inter, sans-serif">i₁</text>
+      <text x="588" y="156" font-size="9" fill="#8C8C8C" text-anchor="end" font-family="Inter, sans-serif">i₃</text>
+      <text x="588" y="176" font-size="9" fill="#8C8C8C" text-anchor="end" font-family="Inter, sans-serif">i₁</text>
+      <text x="588" y="196" font-size="9" fill="#8C8C8C" text-anchor="end" font-family="Inter, sans-serif">i₄</text>
+
+      <!-- brace-style annotation right of H -->
+      <line x1="706" y1="84" x2="706" y2="198" stroke="#8C8C8C" stroke-width="1"/>
+      <text x="716" y="120" font-size="10.5" fill="#46526a">同一物料 ⇒ 嵌入行相近</text>
+      <text x="716" y="138" font-size="10.5" fill="#46526a">行间相关 ρ → 1</text>
+      <text x="716" y="156" font-size="10.5" fill="#46526a">⇒ H¹ 先天低秩</text>
+      <text x="716" y="174" font-size="10.5" fill="#46526a">（σ₁ 主导，见下文命题）</text>
+    </svg>
+    </div>
+    <figcaption><b>从交互数据到低秩输入。</b> (a) 用户–物料二部交互：少数头部物料连接几乎全部用户（红），长尾物料仅零星出现；(b) 对应的交互矩阵呈现列集中——数据在进入模型之前已经集中；(c) 行为序列 token 化后，头部物料的嵌入行反复出现，行间相关 \(\rho\) 接近 1。由下文命题，这直接给出 \(\sigma_1^2/\sum_k\sigma_k^2\) 的下界——谱崩塌的根源在数据侧。</figcaption>
+  </div>
 
   <div class="thm reveal">
     <div class="lbl">定义 · 谱崩塌与有效秩</div>
@@ -555,11 +662,11 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag red">图 2 · 推荐输入的低秩几何</span>
+    <span class="tag red">图 3 · 推荐输入的低秩几何</span>
     <div class="svgwrap">
     <svg width="860" height="250" viewBox="0 0 860 250" role="img" aria-label="推荐输入的低秩几何">
       <rect x="0" y="0" width="860" height="250" rx="12" fill="none"/>
-      <text x="180" y="30" font-size="13" font-weight="700" fill="#ff9f68" text-anchor="middle" font-family="Space Grotesk">(a) token 频次：长尾</text>
+      <text x="180" y="30" font-size="13" font-weight="700" fill="#DD8452" text-anchor="middle" font-family="Space Grotesk">(a) token 频次：长尾</text>
       <g font-family="Inter" font-size="10" fill="#6b7280">
         <g>
           <rect x="60" y="150" width="20" height="70" fill="url(#freqBar1)" rx="3"/>
@@ -575,14 +682,14 @@ a:hover{text-decoration:underline;}
         <line x1="52" y1="220" x2="320" y2="220" stroke="rgba(15,23,42,.15)"/>
         <text x="60" y="238" fill="#6b7280">token id（按频次降序）</text>
         <text x="6" y="196" fill="#6b7280" transform="rotate(-90 8 190)">频次</text>
-        <rect x="336" y="130" width="160" height="78" rx="10" fill="rgba(255,107,107,.05)" stroke="rgba(255,107,107,.2)"/>
-        <text x="336" y="152" fill="#ff9f68">少数 token 反复出现</text>
+        <rect x="336" y="130" width="160" height="78" rx="10" fill="rgba(196,78,82,.05)" stroke="rgba(196,78,82,.2)"/>
+        <text x="336" y="152" fill="#DD8452">少数 token 反复出现</text>
         <text x="336" y="170" fill="#46526a">→ 同一请求内高度自相关</text>
         <text x="336" y="188" fill="#46526a">→ 输入从一开始就低秩</text>
       </g>
-      <text x="440" y="30" font-size="13" font-weight="700" fill="#ff9f68" text-anchor="middle" font-family="Space Grotesk">(b) 奇异谱：σ₁ 独占能量</text>
+      <text x="440" y="30" font-size="13" font-weight="700" fill="#DD8452" text-anchor="middle" font-family="Space Grotesk">(b) 奇异谱：σ₁ 独占能量</text>
       <g>
-        <rect x="500" y="120" width="26" height="100" fill="#ff6b6b" rx="3"/>
+        <rect x="500" y="120" width="26" height="100" fill="#C44E52" rx="3"/>
         <rect x="534" y="212" width="26" height="8" fill="url(#specB)" rx="2"/>
         <rect x="568" y="216" width="26" height="4" fill="url(#specB)" rx="2" opacity=".8"/>
         <rect x="602" y="218" width="26" height="2" fill="url(#specB)" rx="2" opacity=".6"/>
@@ -593,18 +700,18 @@ a:hover{text-decoration:underline;}
       </g>
       <line x1="492" y1="220" x2="782" y2="220" stroke="rgba(15,23,42,.15)"/>
       <text x="500" y="238" fill="#6b7280">奇异值序号 k</text>
-      <text x="496" y="112" fill="#ff6b6b" font-size="10.5">σ₁ ≫ σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3">　（谱间隙宽）</tspan></text>
-      <rect x="492" y="60" width="290" height="40" rx="10" fill="rgba(255,107,107,.05)" stroke="rgba(255,107,107,.2)"/>
-      <text x="502" y="78" fill="#ff9f68" font-size="11">差异能量 Σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3"> σ</tspan><tspan dy="3" font-size="8">k</tspan><tspan dy="-3">² ≈ 0</tspan></text>
+      <text x="496" y="112" fill="#C44E52" font-size="10.5">σ₁ ≫ σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3">　（谱间隙宽）</tspan></text>
+      <rect x="492" y="60" width="290" height="40" rx="10" fill="rgba(196,78,82,.05)" stroke="rgba(196,78,82,.2)"/>
+      <text x="502" y="78" fill="#DD8452" font-size="11">差异能量 Σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3"> σ</tspan><tspan dy="3" font-size="8">k</tspan><tspan dy="-3">² ≈ 0</tspan></text>
       <text x="502" y="93" fill="#46526a" font-size="10.5">输入侧已无差异可保留，注意力再逐层压缩</text>
       <defs>
-        <linearGradient id="freqBar1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff9f68"/><stop offset="100%" stop-color="#ff6b6b"/></linearGradient>
-        <linearGradient id="freqBar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb87a"/><stop offset="100%" stop-color="#ff8a5e"/></linearGradient>
-        <linearGradient id="freqBar3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffd09a"/><stop offset="100%" stop-color="#ffa06a"/></linearGradient>
-        <linearGradient id="freqBar4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe0b8"/><stop offset="100%" stop-color="#ffb77e"/></linearGradient>
+        <linearGradient id="freqBar1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#DD8452"/><stop offset="100%" stop-color="#C44E52"/></linearGradient>
+        <linearGradient id="freqBar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E09A66"/><stop offset="100%" stop-color="#ff8a5e"/></linearGradient>
+        <linearGradient id="freqBar3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E7B58A"/><stop offset="100%" stop-color="#ffa06a"/></linearGradient>
+        <linearGradient id="freqBar4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#EFCBAA"/><stop offset="100%" stop-color="#ffb77e"/></linearGradient>
         <linearGradient id="freqBar5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8a93a3"/><stop offset="100%" stop-color="#5a6272"/></linearGradient>
         <linearGradient id="freqBar6" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8a93a3"/><stop offset="100%" stop-color="#6a7284"/></linearGradient>
-        <linearGradient id="specB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5f8dff"/><stop offset="100%" stop-color="#1f3a6e"/></linearGradient>
+        <linearGradient id="specB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7B96C4"/><stop offset="100%" stop-color="#3A5378"/></linearGradient>
       </defs>
     </svg>
     </div>
@@ -635,13 +742,13 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag red">图 3 · 前向–反向闭环</span>
+    <span class="tag red">图 4 · 前向–反向闭环</span>
     <div class="svgwrap">
     <svg width="860" height="360" viewBox="0 0 860 360" role="img" aria-label="前向低通与反向梯度饥饿构成的自增强回路">
       <defs>
-        <marker id="lpR" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ff6b6b"/></marker>
-        <marker id="lpO" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#ea580c"/></marker>
-        <marker id="lpG" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#8a93a3"/></marker>
+        <marker id="lpR" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#C44E52"/></marker>
+        <marker id="lpO" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ea580c"/></marker>
+        <marker id="lpG" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8a93a3"/></marker>
       </defs>
 
       <!-- trigger annotation -->
@@ -653,12 +760,12 @@ a:hover{text-decoration:underline;}
       </g>
 
       <!-- forward arc (H -> A) -->
-      <path d="M350 140 Q430 52 510 140" fill="none" stroke="#ff6b6b" stroke-width="2.5" marker-end="url(#lpR)"/>
-      <text x="430" y="40" font-size="12.5" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">前向 · 低通平均</text>
+      <path d="M350 140 Q430 52 510 140" fill="none" stroke="#C44E52" stroke-width="1.8" marker-end="url(#lpR)"/>
+      <text x="430" y="40" font-size="12.5" font-weight="700" fill="#C44E52" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">前向 · 低通平均</text>
       <text x="430" y="60" font-size="10.5" fill="#6b7280" text-anchor="middle">坍缩的 H 生成低秩 A，各行被拉向同一均值方向</text>
 
       <!-- backward arc (A -> H) -->
-      <path d="M510 248 Q430 336 350 248" fill="none" stroke="#ea580c" stroke-width="2.5" marker-end="url(#lpO)"/>
+      <path d="M510 248 Q430 336 350 248" fill="none" stroke="#ea580c" stroke-width="1.8" marker-end="url(#lpO)"/>
       <text x="430" y="322" font-size="12.5" font-weight="700" fill="#ea580c" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">反向 · 梯度饥饿</text>
       <text x="430" y="342" font-size="10.5" fill="#6b7280" text-anchor="middle">低秩 A 使梯度集中于主导子空间，次奇异方向得不到更新</text>
 
@@ -672,7 +779,7 @@ a:hover{text-decoration:underline;}
       <!-- H card -->
       <g>
         <rect x="58" y="128" width="284" height="132" rx="14" fill="#ffffff" stroke="rgba(15,23,42,.14)" stroke-width="1.5"/>
-        <rect x="58" y="126" width="284" height="3.5" rx="1.75" fill="#ff6b6b" opacity=".85"/>
+        <rect x="58" y="126" width="284" height="3.5" rx="1.75" fill="#C44E52" opacity=".85"/>
         <text x="200" y="158" font-size="13" font-weight="700" fill="#1a2332" text-anchor="middle" font-family="Space Grotesk, Inter, sans-serif">H · token 嵌入矩阵</text>
         <text x="200" y="182" font-size="11" fill="#46526a" text-anchor="middle">σ₁ ≫ σ<tspan dy="3" font-size="8">k≥2</tspan><tspan dy="-3">：能量集中于主导方向</tspan></text>
         <text x="200" y="201" font-size="11" fill="#46526a" text-anchor="middle">次奇异方向承载长尾 item 的差异</text>
@@ -695,7 +802,7 @@ a:hover{text-decoration:underline;}
     <figcaption><b>前向–反向回路（依 SpecFormer 的刻画改绘）。</b> 推荐输入因长尾与行为集中而先天低秩（触发条件，§3 命题）；前向通路上，坍缩的 H 生成低秩注意力 A，低通平均逐层滤除次奇异方向的差异；反向通路上，低秩 A 使梯度集中于主导子空间，次奇异方向得不到更新（梯度饥饿）。两条通路在 H 与 A 之间闭合为正反馈：σ₁ 的能量份额逐轮上升，有效秩在 \(O(1)\) 层内趋于耗尽。可行的切入点有二——重排谱（SpecFormer，须逐层 SVD），或移除制造集中的路径（§5–§6，无需谱分解）。</figcaption>
   </div>
 
-  <p class="reveal">至此，谱崩塌已被刻画为"能量集中"的状态（§3 命题给出其数据根源，前向–反向回路给出其自增强方式），但这一描述仍是<b>整体</b>的：它没有指认<b>是哪些传播路径</b>在制造集中。下一节将分辨率下沉到相邻两层之间的<b>路径结构</b>。</p>
+  <p class="reveal">至此，谱崩塌已被刻画为一个自增强的状态：数据侧的行相关提供初值（图 2 与命题），注意力侧的低通与饥饿提供动力（图 4 的回路）。修复它有两条路线——<b>重排谱</b>（SpecFormer：逐层 SVD 后整形 \(\widetilde\Sigma\)，附加开销与注意力主体同阶），或<b>移除制造集中的路径</b>（本文路线：无需任何谱分解）。后者的可行性取决于一个更细的问题能否回答：<b>究竟是哪些传播路径在制造集中？</b>下一节把分辨率从"矩阵整体"下沉到"路径"。</p>
 </section>
 
 <!-- ==================== 4. 局部化 ==================== -->
@@ -703,7 +810,7 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">4</span> LOCALIZATION AND THE BACKTRACKING BIAS</div>
   <h2 class="title reveal d1">局部化：回溯路径给矩阵连乘带来的偏差<span class="sub">网络科学早就见过同一现象：主特征向量集中在少数 hub 上，谱质量被反复主导放大</span></h2>
 
-  <p class="lead reveal">谱崩塌刻画了"能量集中在哪"，但没有回答"是哪些传播路径制造了集中"。回答后一问需要更细的分辨率——<b>路径</b>。我们先在一个具体的两步例子上建立直觉，再从组合、概率、谱三个角度给出同一现象的等价刻画，最后统一到全文记号。</p>
+  <p class="lead reveal">谱崩塌是一个明确的问题，但标准的谱干预须以逐层 SVD 为代价——在推荐系统的服务约束下，这一代价并不轻。本文转而从另一个角度审视它：<b>集中不是凭空发生的，它由具体的传播路径制造</b>；若能指认并移除这类路径，则无需触碰任何谱分解。本节先在一个最小的两步例子上建立直觉，再从组合、概率、谱三个角度给出同一现象的等价刻画，最后统一到全文记号。</p>
 
   <div class="box reveal">
     <div class="lbl">一个最小的例子</div>
@@ -762,51 +869,51 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag gold">图 4 · 回溯路径与 hub 局部化</span>
+    <span class="tag gold">图 5 · 回溯路径与 hub 局部化</span>
     <div class="svgwrap">
     <svg width="900" height="250" viewBox="0 0 900 250" role="img" aria-label="回溯路径与 hub 局部化">
       <defs>
-        <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff6b6b" stop-opacity=".25"/><stop offset="100%" stop-color="#ff6b6b" stop-opacity="0"/></radialGradient>
+        <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#C44E52" stop-opacity=".25"/><stop offset="100%" stop-color="#C44E52" stop-opacity="0"/></radialGradient>
       </defs>
       <rect x="0" y="0" width="900" height="250" rx="12" fill="none"/>
-      <text x="200" y="28" font-size="13" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">(a) 一条回溯路径 i→j→i</text>
+      <text x="200" y="28" font-size="13" font-weight="700" fill="#D8BC6A" text-anchor="middle" font-family="Space Grotesk">(a) 一条回溯路径 i→j→i</text>
 
       <!-- left: single backtrack -->
-      <circle cx="130" cy="130" r="24" fill="#ffffff" stroke="#ff6b6b" stroke-width="2.5"/>
-      <text x="130" y="137" font-size="14" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">i</text>
-      <circle cx="280" cy="130" r="30" fill="#fff7e0" stroke="#f4c95d" stroke-width="2.5"/>
+      <circle cx="130" cy="130" r="24" fill="#ffffff" stroke="#C44E52" stroke-width="1.8"/>
+      <text x="130" y="137" font-size="14" font-weight="700" fill="#C44E52" text-anchor="middle" font-family="Space Grotesk">i</text>
+      <circle cx="280" cy="130" r="30" fill="#fff7e0" stroke="#D8BC6A" stroke-width="1.8"/>
       <circle cx="280" cy="130" r="46" fill="url(#hubGlow)"/>
-      <text x="280" y="136" font-size="13" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">j</text>
-      <line x1="154" y1="130" x2="250" y2="130" stroke="#ff6b6b" stroke-width="2.5" opacity=".5"
+      <text x="280" y="136" font-size="13" font-weight="700" fill="#D8BC6A" text-anchor="middle" font-family="Space Grotesk">j</text>
+      <line x1="154" y1="130" x2="250" y2="130" stroke="#C44E52" stroke-width="1.8" opacity=".5"
         marker-start="url(#arrRed)" marker-end="url(#arrRed)"/>
-      <path d="M130 162 Q205 190 280 162" fill="none" stroke="#ff6b6b" stroke-width="1.6" stroke-dasharray="5,5" opacity=".55">
+      <path d="M130 162 Q205 190 280 162" fill="none" stroke="#C44E52" stroke-width="1.6" stroke-dasharray="5,5" opacity=".55">
         <animate attributeName="stroke-dashoffset" from="0" to="18" dur="1s" repeatCount="indefinite"/>
       </path>
-      <circle r="6.5" fill="#ff6b6b">
+      <circle r="6.5" fill="#C44E52">
         <animateMotion dur="1.3s" repeatCount="indefinite" path="M130 130 L280 130"/>
       </circle>
-      <circle r="6.5" fill="#ff6b6b">
+      <circle r="6.5" fill="#C44E52">
         <animateMotion dur="1.3s" begin="0.65s" repeatCount="indefinite" path="M280 130 L130 130"/>
       </circle>
       <text x="205" y="215" font-size="11.5" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">b<tspan dy="3" font-size="8.5">ℓ,i</tspan><tspan dy="-3"> = Σ</tspan><tspan dy="3" font-size="8.5">j≠i</tspan><tspan dy="-3"> A</tspan><tspan dy="3" font-size="8.5">ℓ,ij</tspan><tspan dy="-3">·A</tspan><tspan dy="3" font-size="8.5">ℓ−1,ji</tspan></text>
       <text x="205" y="234" font-size="11" fill="#6b7280" text-anchor="middle">第 ℓ−1 层去 j，第 ℓ 层原路返回：无跨 token 传递</text>
 
       <!-- right: hub localization -->
-      <text x="600" y="28" font-size="13" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">(b) hub 回溯集中 → 局部化</text>
-      <circle cx="600" cy="130" r="30" fill="#fff7e0" stroke="#f4c95d" stroke-width="2.5"/>
+      <text x="600" y="28" font-size="13" font-weight="700" fill="#D8BC6A" text-anchor="middle" font-family="Space Grotesk">(b) hub 回溯集中 → 局部化</text>
+      <circle cx="600" cy="130" r="30" fill="#fff7e0" stroke="#D8BC6A" stroke-width="1.8"/>
       <circle cx="600" cy="130" r="55" fill="url(#hubGlow)"/>
-      <text x="600" y="136" font-size="12" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">hub</text>
-      <g stroke="#ff6b6b" stroke-width="2" opacity=".45">
+      <text x="600" y="136" font-size="12" font-weight="700" fill="#D8BC6A" text-anchor="middle" font-family="Space Grotesk">hub</text>
+      <g stroke="#C44E52" stroke-width="2" opacity=".45">
         <line x1="600" y1="160" x2="600" y2="205"/><line x1="600" y1="100" x2="600" y2="55"/>
         <line x1="600" y1="160" x2="652" y2="197"/><line x1="600" y1="160" x2="548" y2="197"/>
         <line x1="600" y1="100" x2="652" y2="63"/><line x1="600" y1="100" x2="548" y2="63"/>
       </g>
-      <g fill="#ffffff" stroke="#ff6b6b" stroke-width="1.8">
+      <g fill="#ffffff" stroke="#C44E52" stroke-width="1.8">
         <circle cx="600" cy="212" r="10"/><circle cx="600" cy="48" r="10"/>
         <circle cx="660" cy="204" r="10"/><circle cx="540" cy="204" r="10"/>
         <circle cx="660" cy="56" r="10"/><circle cx="540" cy="56" r="10"/>
       </g>
-      <g fill="#ff6b6b">
+      <g fill="#C44E52">
         <circle r="5"><animateMotion dur="1.5s" repeatCount="indefinite" path="M600 130 L600 212 L600 130"/></circle>
         <circle r="5"><animateMotion dur="1.5s" begin="0.5s" repeatCount="indefinite" path="M600 130 L660 204 L600 130"/></circle>
         <circle r="5"><animateMotion dur="1.5s" begin="1s" repeatCount="indefinite" path="M600 130 L540 204 L600 130"/></circle>
@@ -814,14 +921,14 @@ a:hover{text-decoration:underline;}
       <!-- IPR bars -->
       <rect x="700" y="40" width="170" height="190" rx="10" fill="rgba(15,23,42,.04)" stroke="rgba(15,23,42,.12)"/>
       <text x="785" y="58" font-size="11" fill="#46526a" text-anchor="middle">特征向量质量 v_k²</text>
-      <g fill="#ff6b6b">
+      <g fill="#C44E52">
         <rect x="710" y="200" width="14" height="3" rx="1"/><rect x="730" y="200" width="14" height="3" rx="1"/>
         <rect x="750" y="200" width="14" height="3" rx="1"/><rect x="770" y="200" width="14" height="3" rx="1"/>
         <rect x="790" y="200" width="14" height="3" rx="1"/><rect x="810" y="200" width="14" height="3" rx="1"/>
         <rect x="830" y="200" width="14" height="3" rx="1"/>
         <rect x="850" y="90" width="14" height="110" rx="3"/>
       </g>
-      <text x="857" y="82" font-size="10" fill="#ff6b6b" text-anchor="middle">hub</text>
+      <text x="857" y="82" font-size="10" fill="#C44E52" text-anchor="middle">hub</text>
       <text x="785" y="226" font-size="10.5" fill="#6b7280" text-anchor="middle">IPR = Σ v_k⁴ ：O(1/n) → O(1)</text>
       <text x="785" y="240" font-size="10" fill="#6b7280" text-anchor="middle">谱质量从全网集中到 hub</text>
     </svg>
@@ -863,42 +970,42 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag cy">图 5 · 一个算子的构造</span>
+    <span class="tag cy">图 6 · 一个算子的构造</span>
     <div class="svgwrap">
     <svg width="760" height="230" viewBox="0 0 760 230" role="img" aria-label="A 平方减去 D 等于非回溯矩阵">
       <rect x="0" y="0" width="760" height="230" rx="12" fill="none"/>
-      <text x="150" y="34" font-size="13" font-weight="700" fill="#4cc9f0" text-anchor="middle" font-family="Space Grotesk">A² = 两步游走计数</text>
+      <text x="150" y="34" font-size="13" font-weight="700" fill="#4C72B0" text-anchor="middle" font-family="Space Grotesk">A² = 两步游走计数</text>
       <g>
         <rect x="95" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
-        <rect x="105" y="70" width="18" height="18" rx="4" fill="#ff6b6b"/>
-        <rect x="127" y="70" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="149" y="70" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="171" y="70" width="18" height="18" rx="4" fill="#5f8dff"/>
-        <rect x="105" y="92" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="127" y="92" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="149" y="92" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="171" y="92" width="18" height="18" rx="4" fill="#5f8dff"/>
-        <rect x="105" y="114" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="127" y="114" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="149" y="114" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="171" y="114" width="18" height="18" rx="4" fill="#5f8dff"/>
-        <rect x="105" y="136" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="127" y="136" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="149" y="136" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="171" y="136" width="18" height="18" rx="4" fill="#ff6b6b"/>
+        <rect x="105" y="70" width="18" height="18" rx="4" fill="#C44E52"/>
+        <rect x="127" y="70" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="149" y="70" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="171" y="70" width="18" height="18" rx="4" fill="#7B96C4"/>
+        <rect x="105" y="92" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="127" y="92" width="18" height="18" rx="4" fill="#C44E52"/><rect x="149" y="92" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="171" y="92" width="18" height="18" rx="4" fill="#7B96C4"/>
+        <rect x="105" y="114" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="127" y="114" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="149" y="114" width="18" height="18" rx="4" fill="#C44E52"/><rect x="171" y="114" width="18" height="18" rx="4" fill="#7B96C4"/>
+        <rect x="105" y="136" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="127" y="136" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="149" y="136" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="171" y="136" width="18" height="18" rx="4" fill="#C44E52"/>
       </g>
       <text x="150" y="200" font-size="11" fill="#6b7280" text-anchor="middle">对角 = 回返 i→j→i（红）</text>
       <text x="380" y="150" font-size="26" fill="#6b7280" font-family="Space Grotesk" text-anchor="middle">−</text>
-      <text x="530" y="34" font-size="13" font-weight="700" fill="#4cc9f0" text-anchor="middle" font-family="Space Grotesk">D = 回溯质量</text>
+      <text x="530" y="34" font-size="13" font-weight="700" fill="#4C72B0" text-anchor="middle" font-family="Space Grotesk">D = 回溯质量</text>
       <g>
         <rect x="475" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
-        <rect x="485" y="70" width="18" height="18" rx="4" fill="#ff6b6b"/>
+        <rect x="485" y="70" width="18" height="18" rx="4" fill="#C44E52"/>
         <rect x="507" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="485" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="92" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="529" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="485" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="114" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="551" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="485" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="136" width="18" height="18" rx="4" fill="#ff6b6b"/>
+        <rect x="485" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="92" width="18" height="18" rx="4" fill="#C44E52"/><rect x="529" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+        <rect x="485" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="114" width="18" height="18" rx="4" fill="#C44E52"/><rect x="551" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+        <rect x="485" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="136" width="18" height="18" rx="4" fill="#C44E52"/>
       </g>
       <text x="530" y="200" font-size="11" fill="#6b7280" text-anchor="middle">只留对角：全部是回溯</text>
-      <text x="592" y="150" font-size="26" fill="#3ddc97" font-family="Space Grotesk" text-anchor="middle">=</text>
+      <text x="592" y="150" font-size="26" fill="#55A868" font-family="Space Grotesk" text-anchor="middle">=</text>
       <text x="150" y="56" font-size="0"></text>
       <g>
         <rect x="600" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
         <rect x="610" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="632" y="70" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="654" y="70" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="676" y="70" width="18" height="18" rx="4" fill="#3ddc97"/>
-        <rect x="610" y="92" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="632" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="654" y="92" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="676" y="92" width="18" height="18" rx="4" fill="#3ddc97"/>
-        <rect x="610" y="114" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="632" y="114" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="654" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="676" y="114" width="18" height="18" rx="4" fill="#3ddc97"/>
-        <rect x="610" y="136" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="632" y="136" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="654" y="136" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="676" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+        <rect x="632" y="70" width="18" height="18" rx="4" fill="#55A868"/><rect x="654" y="70" width="18" height="18" rx="4" fill="#55A868"/><rect x="676" y="70" width="18" height="18" rx="4" fill="#55A868"/>
+        <rect x="610" y="92" width="18" height="18" rx="4" fill="#55A868"/><rect x="632" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="654" y="92" width="18" height="18" rx="4" fill="#55A868"/><rect x="676" y="92" width="18" height="18" rx="4" fill="#55A868"/>
+        <rect x="610" y="114" width="18" height="18" rx="4" fill="#55A868"/><rect x="632" y="114" width="18" height="18" rx="4" fill="#55A868"/><rect x="654" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="676" y="114" width="18" height="18" rx="4" fill="#55A868"/>
+        <rect x="610" y="136" width="18" height="18" rx="4" fill="#55A868"/><rect x="632" y="136" width="18" height="18" rx="4" fill="#55A868"/><rect x="654" y="136" width="18" height="18" rx="4" fill="#55A868"/><rect x="676" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
       </g>
-      <text x="655" y="200" font-size="11" fill="#3ddc97" text-anchor="middle">非回溯：对角清零</text>
+      <text x="655" y="200" font-size="11" fill="#55A868" text-anchor="middle">非回溯：对角清零</text>
     </svg>
     </div>
     <figcaption><b>\(P_2=A^2-D\) 的逐格含义。</b> \(A^2\) 的对角元恰等于"两步后回到原点"的回溯总质量；减去对角矩阵 \(D\) 后，对角被置零，跨 token 的"向前"路径保持不变。</figcaption>
@@ -929,7 +1036,7 @@ a:hover{text-decoration:underline;}
   <p class="reveal">为何修正项取形如 \(D_{\ell,h}\bar M_{\ell-1,h}\)，而非直接作用于本层消息？逐项考察：\(\beta_{\ell,h}\) 为标量门控，\(D_{\ell,h}\) 为纯对角矩阵，\(\bar M_{\ell-1,h}\) 为已缓存的上一层消息。整体效果是<b>逐 token 施加一个系数</b>——不搬运任何跨 token 信息，仅按回溯质量缩放每个 token 的历史状态。这与 §4 的性质一一致：回溯不创造新通道，故只应作为逐点的增益加以处理。</p>
 
   <div class="figure reveal">
-    <span class="tag grn">图 6 · 修正的矩阵观</span>
+    <span class="tag grn">图 7 · 修正的矩阵观</span>
     <div class="eqrow" style="gap:20px;">
       <div>
         <div class="mat sm">
@@ -1035,7 +1142,7 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag grn">图 7 · 崩塌速率对比</span>
+    <span class="tag grn">图 8 · 崩塌速率对比</span>
     <div class="imgwrap">
       <img src="conclusion_row_sim_effrank.png" alt="row similarity 与 effective rank 随层数的演化：TDA 崩塌更慢">
     </div>

@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Make it Deeper · 非回溯注意力与排序 Transformer 的深度之锁</title>
+<meta name="description" content="从 Transformer 的深度崩塌，到推荐输入的低秩谱，再到网络科学中的局部化：一个以符号推进的论证。">
+<meta property="og:title" content="Make it Deeper · 非回溯注意力与排序 Transformer 的深度之锁">
+<meta property="og:description" content="从 Transformer 的深度崩塌，到推荐输入的低秩谱，再到网络科学中的局部化：一个以符号推进的论证。">
+<meta property="og:type" content="article">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%232563eb'/%3E%3Ctext x='32' y='45' font-size='36' font-family='Georgia,serif' font-weight='700' fill='%23ffffff' text-anchor='middle'%3ED%3C/text%3E%3C/svg%3E">
+<script>document.documentElement.classList.add('js');</script>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['\\(','\\)'],['$','$']], displayMath: [['\\[','\\]'],['$$','$$']], processEscapes: true, packages: {'[+]':['ams']} },
+  chtml: { scale: 0.97 },
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code','svg','text'] }
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#ffffff; --bg2:#f7f8fa; --card:#ffffff; --card2:#f4f6f9;
+  --line:#e4e8ee; --line2:#c9d2dc;
+  --ink:#1a2332; --ink2:#46526a; --mute:#7c8798;
+  --blue:#2563eb; --cyan:#0891b2; --red:#dc2626; --redd:#ea580c;
+  --green:#059669; --gold:#b45309; --purple:#7c3aed;
+  --grad-blue:linear-gradient(120deg,#2563eb,#0891b2);
+  --grad-red:linear-gradient(120deg,#dc2626,#ea580c);
+  --grad-green:linear-gradient(120deg,#059669,#0891b2);
+  --grad-gold:linear-gradient(120deg,#b45309,#ea580c);
+  --grad-title:linear-gradient(100deg,#0f172a 10%,#2563eb 45%,#0891b2 70%,#7c3aed 95%);
+  --radius:12px;
+  --font-head:'Inter','Noto Serif SC',sans-serif;
+  --font-body:'Noto Serif SC',Georgia,'Times New Roman',serif;
+  --font-mono:'JetBrains Mono',ui-monospace,monospace;
+}
+*{box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--font-body);line-height:1.9;font-size:15.5px;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background-image:radial-gradient(1000px 400px at 80% -10%,rgba(37,99,235,.05),transparent 60%),
+                   radial-gradient(800px 400px at 0% 20%,rgba(124,58,237,.04),transparent 55%);
+  background-attachment:fixed;}
+::selection{background:rgba(37,99,235,.15);}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:#c9d2dc;border-radius:8px;border:2px solid var(--bg);}
+::-webkit-scrollbar-thumb:hover{background:#aab6c4;}
+
+#prog{position:fixed;top:0;left:0;height:3px;width:0;z-index:1000;background:var(--grad-blue);}
+
+nav{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:900;
+  display:flex;align-items:center;gap:4px;padding:8px 10px;border-radius:999px;
+  background:rgba(255,255,255,.85);backdrop-filter:blur(14px);border:1px solid var(--line);
+  box-shadow:0 8px 30px rgba(30,50,90,.12);max-width:92vw;overflow-x:auto;white-space:nowrap;}
+nav .logo{font-family:var(--font-head);font-weight:700;font-size:12.5px;letter-spacing:.04em;
+  padding:6px 12px;border-radius:999px;background:var(--grad-blue);color:#fff;margin-right:4px;}
+nav a{font-family:var(--font-head);font-size:12px;font-weight:500;color:var(--mute);
+  text-decoration:none;padding:6px 11px;border-radius:999px;transition:.25s;}
+nav a:hover{color:var(--ink);background:var(--card2);}
+nav a.on{color:var(--blue);background:rgba(37,99,235,.08);box-shadow:inset 0 0 0 1px rgba(37,99,235,.25);}
+
+main{max-width:1000px;margin:0 auto;padding:0 22px 90px;}
+.act{scroll-margin-top:92px;padding:76px 0 10px;position:relative;}
+.act::before{content:"";position:absolute;inset:52px -3vw 0;border-top:1px solid var(--line);pointer-events:none;}
+section[id]{scroll-margin-top:92px;}
+
+.kick{font-family:var(--font-head);font-size:11.5px;font-weight:600;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--mute);display:flex;align-items:center;gap:12px;}
+.kick::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--line2),transparent);}
+.kick .actnum{color:var(--blue);font-size:13px;}
+h2.title{font-family:var(--font-head);font-size:clamp(24px,4vw,34px);font-weight:700;
+  letter-spacing:-.01em;line-height:1.25;margin:14px 0 6px;color:var(--ink);}
+h2.title .sub{display:block;font-family:var(--font-body);font-size:15px;font-weight:400;
+  color:var(--mute);letter-spacing:0;margin-top:8px;}
+h3{font-family:var(--font-head);font-size:17.5px;font-weight:600;margin:32px 0 8px;color:var(--ink);}
+p{margin:12px 0;text-align:justify;text-justify:inter-ideograph;overflow-wrap:break-word;word-break:break-word;}
+.lead{font-size:16.5px;color:var(--ink2);line-height:2.05;}
+strong,b{color:var(--ink);font-weight:700;}
+em{color:var(--blue);font-style:normal;}
+.small{font-size:12.5px;color:var(--mute);}
+code{font-family:var(--font-mono);font-size:12.5px;background:var(--card2);
+  border:1px solid var(--line);padding:1px 6px;border-radius:5px;color:#1e40af;}
+
+.box{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 22px;margin:20px 0;position:relative;overflow:hidden;}
+.box::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--blue);}
+.box .lbl{font-family:var(--font-head);font-size:10.5px;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--blue);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.box.grn{border-color:#c4e8d8;background:#f6fcf9;}
+.box.grn::before{background:var(--green);} .box.grn .lbl{color:var(--green);}
+.box.gold{border-color:#f0dcb8;background:#fdfaf4;}
+.box.gold::before{background:var(--gold);} .box.gold .lbl{color:var(--gold);}
+.box.cy{border-color:#c3e2ea;background:#f5fbfc;}
+.box.cy::before{background:var(--cyan);} .box.cy .lbl{color:var(--cyan);}
+
+.thm{background:var(--card2);border:1px solid var(--line);border-left:3px solid var(--blue);
+  border-radius:10px;padding:16px 20px;margin:16px 0;}
+.thm .lbl{font-family:var(--font-head);font-size:11px;font-weight:700;letter-spacing:.06em;
+  color:var(--blue);text-transform:uppercase;margin-bottom:4px;}
+.thm.grn{border-left-color:var(--green);} .thm.grn .lbl{color:var(--green);}
+.thm.gold{border-left-color:var(--gold);} .thm.gold .lbl{color:var(--gold);}
+
+.figure{background:var(--bg2);border:1px solid var(--line);
+  border-radius:var(--radius);padding:22px 22px 14px;margin:26px 0;position:relative;}
+.figure .tag{position:absolute;top:-11px;left:20px;font-family:var(--font-head);font-size:10px;
+  font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;
+  background:var(--grad-blue);padding:3px 12px;border-radius:999px;box-shadow:0 4px 14px rgba(37,99,235,.3);}
+.figure .tag.red{background:var(--grad-red);} .figure .tag.grn{background:var(--grad-green);}
+.figure .tag.gold{background:var(--grad-gold);} .figure .tag.cy{background:linear-gradient(120deg,#0891b2,#2563eb);}
+figure{margin:0;}
+figcaption{font-size:12.5px;color:var(--mute);margin-top:14px;padding-top:10px;
+  border-top:1px dashed var(--line2);line-height:1.75;}
+figcaption b{color:var(--ink2);}
+.svgwrap{display:flex;justify-content:center;overflow-x:auto;}
+svg{max-width:100%;height:auto;display:block;}
+.imgwrap{display:flex;justify-content:center;overflow-x:auto;}
+.imgwrap img{max-width:100%;height:auto;display:block;border-radius:8px;border:1px solid var(--line);}
+.eqrow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:center;margin:6px 0;}
+.sym{font-size:24px;color:var(--mute);font-weight:300;min-width:20px;text-align:center;font-family:var(--font-head);}
+
+/* ---------- matrix cells ---------- */
+.mat{display:inline-grid;gap:2px;padding:5px;background:#fff;border-radius:8px;
+  border:1px solid var(--line);vertical-align:middle;box-shadow:0 1px 4px rgba(15,23,42,.05);}
+.mat.sm{grid-template-columns:repeat(5,auto);}
+.mat .cell{width:20px;height:20px;border-radius:4px;}
+.mat.sm .cell{width:16px;height:16px;}
+.c0{background:rgba(15,23,42,.06);}
+.c1{background:rgba(37,99,235,.20);}
+.c2{background:rgba(37,99,235,.42);}
+.c3{background:rgba(8,145,178,.55);}
+.c4{background:rgba(8,145,178,.80);}
+.hi-red{background:linear-gradient(135deg,#e0453e,#f28c4f)!important;box-shadow:0 0 8px rgba(224,69,62,.35);}
+.hi-grn{background:linear-gradient(135deg,#16a34a,#22d3ee)!important;box-shadow:0 0 8px rgba(22,163,74,.35);}
+.hi-gold{background:linear-gradient(135deg,#d97706,#f59e0b)!important;box-shadow:0 0 8px rgba(217,119,6,.35);}
+.lblm{font-size:12px;color:var(--mute);text-align:center;margin-top:8px;font-family:var(--font-head);line-height:1.6;}
+
+/* ---------- code block ---------- */
+.codeblock{background:#10141d;color:#d8dee9;border-radius:10px;padding:16px 20px;margin:14px 0;
+  font-family:var(--font-mono);font-size:12.5px;line-height:1.7;overflow-x:auto;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.25);}
+.codeblock .c{color:#5c6a8a;}
+.codeblock .op{color:#88c0d0;}
+.codeblock .fn{color:#81a1c1;}
+.codeblock .kw{color:#b48ead;}
+.codeblock .hl{background:rgba(180,142,173,.16);display:block;padding:0 6px;margin:2px -6px;border-radius:3px;border-left:2px solid #b48ead;}
+.codeblock .hl2{background:rgba(136,192,208,.12);display:block;padding:0 6px;margin:2px -6px;border-radius:3px;border-left:2px solid #88c0d0;}
+
+.hero{position:relative;min-height:90vh;display:flex;flex-direction:column;
+  justify-content:center;padding:120px 0 40px;overflow:hidden;}
+.hero::before{content:"";position:absolute;inset:0;
+  background:
+    radial-gradient(700px 380px at 20% 20%,rgba(37,99,235,.08),transparent 60%),
+    radial-gradient(700px 380px at 80% 30%,rgba(8,145,178,.06),transparent 60%),
+    radial-gradient(600px 420px at 60% 90%,rgba(124,58,237,.06),transparent 60%);}
+.hero .inner{position:relative;z-index:2;text-align:center;max-width:900px;margin:0 auto;}
+.hero .pillrow{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:22px 0 8px;}
+.pill{font-family:var(--font-head);font-size:11px;font-weight:600;letter-spacing:.04em;
+  padding:6px 14px;border-radius:999px;border:1px solid var(--line2);color:var(--ink2);background:var(--bg);}
+.pill.b{color:var(--cyan);border-color:#b9dde8;background:#f0f9fb;}
+.pill.g{color:var(--green);border-color:#bfe3d3;background:#f3fbf7;}
+.hero h1{font-family:var(--font-head);font-size:clamp(34px,6vw,60px);font-weight:700;
+  letter-spacing:-.02em;line-height:1.12;margin:10px 0 18px;background:var(--grad-title);
+  -webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero .subtitle{font-size:clamp(15px,2.2vw,18px);color:var(--ink2);line-height:1.8;max-width:760px;margin:0 auto;}
+.hero .readmore{display:inline-flex;align-items:center;gap:8px;margin-top:30px;
+  font-family:var(--font-head);font-size:13px;font-weight:600;color:#fff;
+  background:var(--grad-blue);padding:12px 24px;border-radius:999px;text-decoration:none;
+  box-shadow:0 8px 26px rgba(37,99,235,.3);transition:.25s;}
+.hero .readmore:hover{transform:translateY(-2px);box-shadow:0 12px 34px rgba(37,99,235,.4);}
+
+.tldr{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:22px 0;}
+.tldr .cell{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;
+  transition:.25s;}
+.tldr .cell:hover{transform:translateY(-3px);border-color:var(--line2);background:var(--card2);}
+.tldr .n{font-family:var(--font-head);font-size:22px;font-weight:700;color:var(--blue);}
+.tldr .c{font-size:12.5px;color:var(--ink2);line-height:1.7;margin-top:4px;}
+
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;margin:20px 0;align-items:stretch;}
+.flow .step{position:relative;background:var(--card);border:1px solid var(--line);
+  border-radius:10px;padding:14px 14px;font-size:13px;}
+.flow .step .st{font-family:var(--font-head);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+.flow .step .tx{font-size:12px;color:var(--ink2);margin-top:4px;line-height:1.6;}
+.flow .step.b{border-top:3px solid var(--blue);} .flow .step.b .st{color:var(--blue);}
+.flow .step.o{border-top:3px solid var(--gold);} .flow .step.o .st{color:var(--gold);}
+.flow .step.g{border-top:3px solid var(--green);} .flow .step.g .st{color:var(--green);}
+.flow .step.r{border-top:3px solid var(--red);} .flow .step.r .st{color:var(--red);}
+.flow .arr{display:flex;align-items:center;justify-content:center;color:var(--mute);font-size:16px;min-width:30px;}
+
+.tl{position:relative;margin:34px 0 10px;}
+.tl::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:2px;transform:translateX(-50%);
+  background:linear-gradient(180deg,var(--blue),var(--cyan),var(--green),var(--gold),var(--red));opacity:.4;}
+.tl .item{position:relative;width:50%;padding:0 34px 36px;}
+.tl .item:nth-child(odd){left:0;text-align:right;}
+.tl .item:nth-child(even){left:50%;}
+.tl .item .node{position:absolute;top:6px;width:22px;height:22px;border-radius:50%;
+  border:3px solid var(--bg);box-shadow:0 0 0 3px var(--c),0 0 16px var(--c);background:var(--c);}
+.tl .item:nth-child(odd) .node{right:-11px;}
+.tl .item:nth-child(even) .node{left:-11px;}
+.tl .item .card{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px 18px;text-align:left;}
+.tl .item .card h4{margin:0 0 6px;font-family:var(--font-head);font-size:14.5px;}
+.tl .item .card p{margin:0;font-size:12.5px;color:var(--ink2);line-height:1.7;}
+@media(max-width:720px){.tl::before{left:14px;}.tl .item{width:100%;left:0!important;padding:0 0 26px 44px;text-align:left!important;}
+  .tl .item .node{left:3px!important;right:auto!important;}.tl .item:nth-child(odd) .card{text-align:left;}}
+
+.foot{margin-top:70px;padding-top:26px;border-top:1px solid var(--line);font-size:12px;color:var(--mute);
+  display:flex;flex-wrap:wrap;gap:8px 26px;align-items:center;line-height:1.8;}
+.foot .badge{font-family:var(--font-head);font-size:10px;font-weight:700;letter-spacing:.1em;
+  color:var(--cyan);border:1px solid #b9dde8;padding:3px 10px;border-radius:999px;background:#f0f9fb;}
+.refs{font-size:12px;color:var(--mute);line-height:1.9;}
+.refs b{color:var(--ink2);}
+.refs li{margin:4px 0;}
+
+.js .reveal{opacity:0;transform:translateY(26px);
+  transition:opacity .9s ease,transform .9s cubic-bezier(.22,.61,.36,1);}
+.js .reveal.in{opacity:1;transform:none;}
+.js .reveal.d1{transition-delay:.08s;} .js .reveal.d2{transition-delay:.16s;}
+.js .reveal.d3{transition-delay:.24s;} .js .reveal.d4{transition-delay:.32s;}
+.draw{stroke-dasharray:1200;stroke-dashoffset:1200;}
+.in .draw, .reveal.in .draw{animation:draw 2.2s ease forwards;}
+@keyframes draw{to{stroke-dashoffset:0;}}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto;}
+  .js .reveal{opacity:1;transform:none;transition:none;}
+  .in .draw, .reveal.in .draw{animation:none;stroke-dashoffset:0;}
+}
+
+@media(max-width:760px){
+  nav a{display:none;} nav .logo{display:block;}
+  .act{padding-top:56px;}
+  .box,.thm{padding:14px 16px;}
+}
+
+a{color:var(--cyan);text-decoration:none;}
+a:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<div id="prog"></div>
+
+<nav>
+  <span class="logo">Make it Deeper</span>
+  <a href="#intro">引言</a>
+  <a href="#sec2">深度崩塌</a>
+  <a href="#sec3">低秩谱</a>
+  <a href="#sec4">局部化</a>
+  <a href="#sec5">非回溯算子</a>
+  <a href="#sec6">TDA</a>
+  <a href="#sec7">观测</a>
+  <a href="#finale">逻辑链</a>
+</nav>
+
+<header class="hero">
+  <div class="inner">
+    <div class="kick reveal" style="justify-content:center;">研究笔记 · 排序 Transformer 的深度扩展</div>
+    <h1 class="reveal d1">Make it Deeper</h1>
+    <p class="subtitle reveal d2">语言模型可将同一注意力结构堆叠至上千层，排序 Transformer 却往往在约第 6 层即停止增益。本文沿 <b>一般机制</b> &rarr; <b>输入几何</b> &rarr; <b>路径结构</b> 三个环节逐层推进：首先考察 Transformer 的秩崩塌这一一般机制；继而说明推荐输入的低秩谱如何使崩塌提前触发；最后指出，网络科学中称为"局部化"的现象，其路径级根源在于回溯路径对矩阵连乘引入的偏差，并据此提出非回溯注意力（TDA）作为候选修正。</p>
+    <div class="pillrow reveal d3">
+      <span class="pill">行随机连乘 &rarr; 秩 1</span>
+      <span class="pill">奇异谱集中</span>
+      <span class="pill g">非回溯算子 \(P_2=A^2-D\)</span>
+      <span class="pill">每块 \(O(HT^2+Td)\)</span>
+    </div>
+    <a class="readmore reveal d4" href="#intro">阅读全文 ↓</a>
+  </div>
+
+  <div class="inner reveal d3" style="max-width:960px;margin-top:34px;">
+  <div class="svgwrap">
+  <svg width="960" height="400" viewBox="0 0 960 400" role="img" aria-label="回溯传播与非回溯传播对比动画">
+    <defs>
+      <radialGradient id="heroGlowL" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#ff6b6b" stop-opacity=".18"/><stop offset="100%" stop-color="#ff6b6b" stop-opacity="0"/>
+      </radialGradient>
+      <radialGradient id="heroGlowR" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#3ddc97" stop-opacity=".16"/><stop offset="100%" stop-color="#3ddc97" stop-opacity="0"/>
+      </radialGradient>
+      <marker id="arrRed" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#ff6b6b"/></marker>
+      <marker id="arrGrn" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+        <path d="M0,0 L8,4 L0,8 Z" fill="#3ddc97"/></marker>
+    </defs>
+
+    <rect x="0" y="0" width="960" height="400" rx="18" fill="#f4f6f9"/>
+    <circle cx="240" cy="200" r="180" fill="url(#heroGlowL)"/>
+    <circle cx="720" cy="200" r="180" fill="url(#heroGlowR)"/>
+
+    <!-- left labels -->
+    <text x="240" y="46" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">普通传播 · 回溯环</text>
+    <text x="240" y="66" font-size="11" fill="#6b7280" text-anchor="middle">质量在 i ↔ j 之间空转，被锁在原地</text>
+
+    <!-- right labels -->
+    <text x="720" y="46" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">非回溯传播 · 一路向前</text>
+    <text x="720" y="66" font-size="11" fill="#6b7280" text-anchor="middle">信息 i → j → k 逐层累积，深度由此而生</text>
+
+    <!-- center divider -->
+    <line x1="480" y1="60" x2="480" y2="350" stroke="rgba(15,23,42,.12)" stroke-dasharray="4,6"/>
+    <rect x="438" y="172" width="84" height="30" rx="15" fill="#ffffff" stroke="rgba(15,23,42,.15)"/>
+    <text x="480" y="192" font-size="12" font-weight="600" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">禁止回溯</text>
+
+    <!-- ============ LEFT: backtrack loop ============ -->
+    <g>
+      <!-- nodes i and j -->
+      <circle cx="150" cy="225" r="26" fill="#ffffff" stroke="#ff6b6b" stroke-width="2.5"/>
+      <text x="150" y="232" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">i</text>
+      <circle cx="330" cy="225" r="26" fill="#ffffff" stroke="#ff6b6b" stroke-width="2.5"/>
+      <text x="330" y="232" font-size="15" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">j</text>
+      <!-- edge with double arrows -->
+      <line x1="176" y1="225" x2="304" y2="225" stroke="#ff6b6b" stroke-width="3" opacity=".6"
+        marker-start="url(#arrRed)" marker-end="url(#arrRed)"/>
+      <!-- oscillation arc -->
+      <path d="M150 262 Q240 296 330 262" fill="none" stroke="#ff6b6b" stroke-width="1.6" stroke-dasharray="5,5" opacity=".5">
+        <animate attributeName="stroke-dashoffset" from="0" to="20" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <!-- particles bouncing (paths trimmed to node-circle edges so labels stay clear) -->
+      <circle r="7" fill="#ff6b6b">
+        <animateMotion dur="1.4s" repeatCount="indefinite" path="M176 225 L304 225"/>
+        <animate attributeName="opacity" values=".9;.4;.9" dur="1.4s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="7" fill="#ff6b6b">
+        <animateMotion dur="1.4s" begin="0.7s" repeatCount="indefinite" path="M304 225 L176 225"/>
+        <animate attributeName="opacity" values=".9;.4;.9" dur="1.4s" repeatCount="indefinite"/>
+      </circle>
+      <!-- trail glows -->
+      <circle r="14" fill="#ff6b6b" opacity=".16">
+        <animateMotion dur="1.4s" begin="-0.25s" repeatCount="indefinite" path="M176 225 L304 225"/>
+      </circle>
+      <circle r="14" fill="#ff6b6b" opacity=".16">
+        <animateMotion dur="1.4s" begin="0.45s" repeatCount="indefinite" path="M304 225 L176 225"/>
+      </circle>
+    </g>
+    <text x="240" y="330" font-size="12" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">A_{ℓ,ij} · A_{ℓ−1,ji} &gt; 0  →  b_ℓ,i 累积</text>
+    <text x="240" y="352" font-size="11" fill="#6b7280" text-anchor="middle">每一步都回到起点：差异不流动，主模态局部化</text>
+
+    <!-- ============ RIGHT: forward path ============ -->
+    <g>
+      <circle cx="600" cy="225" r="26" fill="#ffffff" stroke="#3ddc97" stroke-width="2.5"/>
+      <text x="600" y="232" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">i</text>
+      <circle cx="735" cy="150" r="26" fill="#ffffff" stroke="#3ddc97" stroke-width="2.5"/>
+      <text x="735" y="157" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">j</text>
+      <circle cx="865" cy="225" r="26" fill="#ffffff" stroke="#3ddc97" stroke-width="2.5"/>
+      <text x="865" y="232" font-size="15" font-weight="700" fill="#3ddc97" text-anchor="middle" font-family="Space Grotesk">k</text>
+      <line x1="622" y1="220" x2="714" y2="160" stroke="#3ddc97" stroke-width="3" opacity=".65" marker-end="url(#arrGrn)"/>
+      <line x1="755" y1="160" x2="840" y2="218" stroke="#3ddc97" stroke-width="3" opacity=".65" marker-end="url(#arrGrn)"/>
+      <!-- forward particle stream (two edge-aligned subpaths; jump at node j reads as absorb/re-emit) -->
+      <circle r="7" fill="#3ddc97">
+        <animateMotion dur="3s" repeatCount="indefinite" path="M622 220 L714 160 M756 161 L840 218"/>
+        <animate attributeName="opacity" values=".95;.5;.95" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <circle r="7" fill="#4cc9f0">
+        <animateMotion dur="3s" begin="1s" repeatCount="indefinite" path="M622 220 L714 160 M756 161 L840 218"/>
+      </circle>
+      <circle r="13" fill="#3ddc97" opacity=".15">
+        <animateMotion dur="3s" begin="-0.3s" repeatCount="indefinite" path="M622 220 L714 160 M756 161 L840 218"/>
+      </circle>
+      <!-- depth ladder on right -->
+      <g font-family="Space Grotesk" font-size="11" fill="#3ddc97">
+        <text x="600" y="300" text-anchor="middle">层 ℓ−1</text>
+        <text x="735" y="108" text-anchor="middle">层 ℓ</text>
+        <text x="865" y="300" text-anchor="middle">层 ℓ+1</text>
+      </g>
+    </g>
+    <text x="720" y="330" font-size="12" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">P₂ = A² − D 精确清掉回返项</text>
+    <text x="720" y="352" font-size="11" fill="#6b7280" text-anchor="middle">信息持续向前：有效秩被保住，深度可以增长</text>
+  </svg>
+  </div>
+  </div>
+</header>
+
+<main>
+<!-- ==================== 1. 引言 ==================== -->
+<section id="intro" class="act">
+  <div class="kick reveal"><span class="actnum">1</span> INTRODUCTION</div>
+  <h2 class="title reveal d1">同一个结构，两种深度命运<span class="sub">相同的 self-attention、相同的残差结构——为什么一个能变深，一个在浅层就饱和？</span></h2>
+
+  <p class="lead reveal">语言建模中的 Transformer 几乎可以无限加深，深度成为可扩展的维度；而在广告、排序与推荐场景，统一的排序 Transformer 堆叠至约 6–8 层时增益便趋于平缓，继续加深反而可能更差。二者采用相同的注意力机制与残差结构，因此差异必然源于别处。本文沿三个逐步收紧的环节展开，尽量以符号推进论证：</p>
+
+  <div class="tldr">
+    <div class="cell reveal"><div class="n">①</div><div class="c">秩崩塌是注意力的一般机制：行随机矩阵之积逐层收敛到秩 1 退化型，即 \(A_L\cdots A_1\to\mathbf{1}\,\boldsymbol p^\top\)</div></div>
+    <div class="cell reveal d1"><div class="n">②</div><div class="c">推荐输入具低秩谱：奇异值集中于首值、谱间隙显著，收缩速率由次主导奇异值 \(|\lambda_2|\) 决定，崩塌被提前至 \(O(1)\) 层</div></div>
+    <div class="cell reveal d2"><div class="n">③</div><div class="c">局部化：回溯路径 \(i\to j\to i\) 对连乘引入可辨识的偏差，主导特征向量被反复放大，加速有效秩的下降</div></div>
+    <div class="cell reveal d3"><div class="n">④</div><div class="c">非回溯算子 \(P_2=A^2-D\) 在路径层移除该偏差；TDA 以 \(O(HT^2+Td)\) 的附加开销实现之</div></div>
+  </div>
+</section>
+
+<!-- ==================== 2. 深度崩塌 ==================== -->
+<section id="sec2" class="act">
+  <div class="kick reveal"><span class="actnum">2</span> RANK COLLAPSE IN DEPTH</div>
+  <h2 class="title reveal d1">深层崩塌：行随机连乘趋向秩 1<span class="sub">注意力的一次加权平均本质，是后续一切讨论的出发点</span></h2>
+
+  <p class="lead reveal">记第 \(\ell\) 层输入 token 矩阵为 \(X^{\ell}\in\mathbb{R}^{T\times d}\)，其中 \(T\) 为序列长度、\(d\) 为表示维度。标准自注意力先经线性投影 \(Q_{\ell}=X^{\ell}W^{Q},\; K_{\ell}=X^{\ell}W^{K},\; V_{\ell}=X^{\ell}W^{V}\)，再对各行施加 softmax 归一化：</p>
+
+  <div class="box reveal">
+    <div class="lbl">注意力权重是行随机矩阵</div>
+    \[A_\ell=\mathrm{softmax}_{\mathrm{row}}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)\in\mathbb{R}^{T\times T}\]
+    <p style="margin:4px 0;">\((A_\ell)_{ij}\) 为 token \(i\) 分配给 token \(j\) 的注意力权重。各行非负且归一，满足 \(A_\ell\mathbf{1}=\mathbf{1}\)，故 <b>\(A_\ell\) 是行随机矩阵</b>：它不改变总质量，仅决定每一行的质量分配。</p>
+  </div>
+
+  <div class="box reveal d1">
+    <div class="lbl">注意力消息 = 加权平均</div>
+    \[M_\ell=A_\ell\,V_\ell,\qquad (M_\ell)_i=\sum_{j}(A_\ell)_{ij}\,V_j\]
+    <p style="margin:4px 0;">\((M_\ell)_i\) 是各值向量的<b>凸组合</b>。忽略残差与 FFN 后，\(L\) 层注意力的复合效果为</p>
+    \[H^{(L)}\;\propto\;A_L\,A_{L-1}\cdots A_1\,V\]
+  </div>
+
+  <p class="reveal">把 \(\{A_\ell\}\) 视为一列行随机矩阵时，其连乘继承了经典马尔可夫链的代数结构：各行均值方向被逐层对齐，混合时间由次主导特征值的模 \(|\lambda_2(A_\ell)|\) 控制，差异方向按 \(\prod_\ell|\lambda_2^{(\ell)}|\) 衰减；在一致遍历条件下，乘积收敛到秩 1 的退化投影 \(\mathbf{1}\boldsymbol p^\top\)。换言之——<b>深度本身并不产生新信息，它只是概率质量的一次次转移；而多次转移的极限，是把全部质量押到单一稳态方向</b>。这一结论与具体数据无关，是注意力加权平均本质的直接推论。</p>
+
+  <div class="thm reveal">
+    <div class="lbl">命题 · 秩崩塌</div>
+    <p style="margin:6px 0;">若 \(A_1,\dots,A_L\) 为行随机矩阵且满足一致遍历性条件，则</p>
+    \[\underbrace{A_L\cdots A_1}_{L\text{ 个行随机矩阵}}\;\longrightarrow\;\mathbf{1}\,\boldsymbol p^{\top}\quad\text{（秩 1）}\]
+    <p style="margin:6px 0;">其中 \(\boldsymbol p\) 为平稳分布。收敛速度由次主特征值 \(|\lambda_2|\) 决定：差异方向按 \(|\lambda_2|^L\) 衰减。Dong et al. (2021) 在无残差设定下证明该收敛为<b>双重指数</b>速度——有效秩在 \(O(\log L)\) 层内即趋近 1，且这一加速源于注意力矩阵依赖其自身输入所产生的级联效应。</p>
+  </div>
+
+  <div class="figure reveal">
+    <span class="tag">图 1 · 坍缩的几何直觉</span>
+    <div class="svgwrap">
+    <svg width="760" height="240" viewBox="0 0 760 240" role="img" aria-label="token 表示在连乘下坍缩为单点">
+      <defs>
+        <radialGradient id="cl1" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#5f8dff"/><stop offset="100%" stop-color="#1f3a6e"/></radialGradient>
+        <radialGradient id="cl2" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#4cc9f0"/><stop offset="100%" stop-color="#155e86"/></radialGradient>
+        <radialGradient id="cl3" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#4c3a8a"/></radialGradient>
+        <radialGradient id="cl4" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#3ddc97"/><stop offset="100%" stop-color="#1d6e54"/></radialGradient>
+        <radialGradient id="cl5" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#f4c95d"/><stop offset="100%" stop-color="#8a6a1e"/></radialGradient>
+        <radialGradient id="cl6" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="#ff6b6b"/><stop offset="100%" stop-color="#8a2626"/></radialGradient>
+      </defs>
+      <rect x="0" y="0" width="760" height="240" rx="12" fill="none"/>
+      <line x1="240" y1="40" x2="240" y2="200" stroke="rgba(255,255,255,.06)"/>
+      <line x1="500" y1="40" x2="500" y2="200" stroke="rgba(255,255,255,.06)"/>
+
+      <!-- panel 1: scattered clusters -->
+      <text x="120" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">输入 V：各行差异显著</text>
+      <g>
+        <circle cx="70" cy="110" r="26" fill="url(#cl1)"/><circle cx="82" cy="98" r="10" fill="url(#cl1)"/><circle cx="58" cy="122" r="8" fill="url(#cl1)"/>
+        <circle cx="150" cy="70" r="24" fill="url(#cl2)"/><circle cx="140" cy="82" r="9" fill="url(#cl2)"/><circle cx="160" cy="60" r="7" fill="url(#cl2)"/>
+        <circle cx="58" cy="170" r="22" fill="url(#cl3)"/><circle cx="48" cy="180" r="8" fill="url(#cl3)"/><circle cx="68" cy="178" r="7" fill="url(#cl3)"/>
+        <circle cx="150" cy="160" r="24" fill="url(#cl4)"/><circle cx="162" cy="152" r="9" fill="url(#cl4)"/>
+        <circle cx="185" cy="120" r="20" fill="url(#cl5)"/><circle cx="198" cy="112" r="8" fill="url(#cl5)"/>
+      </g>
+      <text x="120" y="215" font-size="11" fill="#6b7280" text-anchor="middle">有效秩 ≈ T · 差异预算充足</text>
+
+      <!-- panel 2: pulled to center -->
+      <text x="370" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">乘 A<tspan dy="3" font-size="9">1</tspan><tspan dy="-3">：一次平均后</tspan></text>
+      <g>
+        <circle cx="360" cy="105" r="24" fill="url(#cl1)"/><circle cx="368" cy="96" r="9" fill="url(#cl1)"/>
+        <circle cx="388" cy="118" r="22" fill="url(#cl2)"/><circle cx="396" cy="110" r="8" fill="url(#cl2)"/>
+        <circle cx="345" cy="128" r="20" fill="url(#cl3)"/><circle cx="352" cy="138" r="8" fill="url(#cl3)"/>
+        <circle cx="382" cy="138" r="20" fill="url(#cl4)"/>
+        <circle cx="372" cy="126" r="16" fill="url(#cl5)"/>
+        <circle cx="362" cy="118" r="12" fill="url(#cl6)"/>
+      </g>
+      <text x="370" y="215" font-size="11" fill="#6b7280" text-anchor="middle">差异被压缩，开始互相重叠</text>
+
+      <!-- panel 3: single blob -->
+      <text x="630" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">连乘 A<tspan dy="3" font-size="9">L</tspan><tspan dy="-3">⋯A</tspan><tspan dy="3" font-size="9">1</tspan><tspan dy="-3">：秩 1</tspan></text>
+      <circle cx="630" cy="128" r="30" fill="url(#cl6)" opacity=".95"/>
+      <circle cx="622" cy="120" r="20" fill="url(#cl1)" opacity=".8"/>
+      <circle cx="638" cy="134" r="16" fill="url(#cl2)" opacity=".8"/>
+      <circle cx="630" cy="120" r="8" fill="#1a2332" opacity=".5"/>
+      <text x="630" y="215" font-size="11" fill="#ff6b6b" text-anchor="middle">所有 token 塌成一点 → 秩 1</text>
+
+      <!-- arrows -->
+      <g stroke="#8a93a3" stroke-width="1.6" fill="none">
+        <path d="M208 128 L252 128" marker-end="url(#arr)" opacity=".8"/>
+        <path d="M468 128 L512 128" marker-end="url(#arr)" opacity=".8"/>
+      </g>
+      <defs><marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#6b7280"/></marker></defs>
+    </svg>
+    </div>
+    <figcaption><b>几何直觉。</b> token 表示为一组散布的点（高秩）；行随机连乘不断将其拉向质心；层数充分深时，各点重合为同一向量，矩阵秩退化为 1。Dong et al. (2021) 证明无残差时该收敛为双重指数速度。</figcaption>
+  </div>
+
+  <div class="thm reveal d1">
+    <div class="lbl">定理（Noci et al. 2022, arXiv:2206.03126）</div>
+    <p style="margin:6px 0;">在初始化假设 \(A_\ell\approx\tfrac1T\mathbf{1}\mathbf{1}^\top\) 下，定义 token 平均相关性</p>
+    \[\rho^{\ell}=\frac{1}{T(T-1)}\sum_{k\ne k'}\frac{\langle X_k^{\ell},\,X_{k'}^{\ell}\rangle}{\lVert X_k^{\ell}\rVert\,\lVert X_{k'}^{\ell}\rVert}\]
+    <p style="margin:6px 0;">他们沿三个层次刻画崩塌（记号按原文）：</p>
+    <ul style="margin:6px 0;padding-left:20px;">
+      <li><b>Lemma 3.1（梯度范数消失）</b>：若第 \(\ell\) 层的 token 相关性 \(\rho^\ell\to1\)，则输出 \(X^\ell\) 依概率收敛到秩 1 矩阵；在均匀注意力假设 \(A_\ell=\tfrac1T\mathbf 1\mathbf 1^\top\) 下，<b>对 \(Q,K\) 的梯度范数严格为零</b>——表示空间坍缩的同时，学习信号被同步切断。</li>
+      <li><b>Theorem 3.1（梯度消失）</b>：Token 相关性在<b>无限深</b>极限下以幂律方式趋于 1（而非指数），由此导致的梯度消失是<b>秩崩塌的直接后果</b>：梯度范数随深度收敛到 0，其速率由剩余相关性决定。</li>
+      <li><b>Theorem 3.2（残差缩放的判别）</b>：设残差缩放 \(\alpha_1^2=\alpha_2^2=\alpha^2\)。若按深度缩放 \(\alpha^2=\tilde\alpha/L\)（即 \(1/\sqrt{L}\) 缩放），则 \(\lim_{L\to\infty}\rho^{\ell}<1\)，秩在无穷深处仍被保住；若 \(\alpha^2\) 为常数，则 \(\lim_{L\to\infty}\rho^{\ell}=1\)，秩必定崩塌。</li>
+    </ul>
+    <p style="margin:6px 0;">三者合起来给出一个<b>判别准则</b>：残差缩放是否随 \(L\) 衰减，直接决定无穷深度处相关性是否趋于 1、梯度是否消失。如前文所述，秩 1 时 \(Q,K\) 的梯度严格为零：</p>
+    \[\mathbb{E}\left\lVert\tfrac{\partial\mathcal L}{\partial W^{Q,\ell}}\right\rVert_F^2=0,\qquad
+      \mathbb{E}\left\lVert\tfrac{\partial\mathcal L}{\partial W^{K,\ell}}\right\rVert_F^2=0\]
+  </div>
+
+  <div class="thm reveal d2">
+    <div class="lbl">谱间隙视角（Saada et al. 2024, arXiv:2410.07799）</div>
+    <p style="margin:6px 0;">注意力矩阵的两个最大奇异值之间会出现<b>谱间隙</b>（spectral gap）。随机矩阵理论表明，这个间隙驱动宽度方向的秩崩塌，并进一步加速深度方向的崩塌。去除该间隙可以缓解崩塌，但<b>深度方向的秩崩塌是连乘的固有结果，结构改动只能减缓、不能消除</b>。</p>
+  </div>
+
+  <div class="box grn reveal d3">
+    <div class="lbl">语言模型：残差缩放作为对策</div>
+    <p style="margin:4px 0;">秩崩塌在语言里同样存在，但 \(1/\sqrt{L}\) 残差缩放把它减缓了：相关性在无穷深处不趋于 1，梯度不消失，深度因此成为可预测的扩展轴。这一环节说明：<b>崩塌的速度不是固定的，它取决于输入的谱与结构。</b></p>
+  </div>
+</section>
+
+<!-- ==================== 3. 低秩谱 ==================== -->
+<section id="sec3" class="act">
+  <div class="kick reveal"><span class="actnum">3</span> LOW-RANK SPECTRUM OF RECOMMENDATION INPUT</div>
+  <h2 class="title reveal d1">推荐输入的低秩谱：奇异值集中，谱间隙大<span class="sub">机制相同，触发却提前：起始状态已不同</span></h2>
+
+  <p class="lead reveal">语言 token 位于连续平滑的语义流形上；推荐 token 则高度离散、异质且严重长尾——同一 item、创作者、类目或意图在一次请求的近期行为中反复出现。Cui et al. (2026, SpecFormer) 观察到，这种异质与长尾直接表现为嵌入矩阵的<b>谱崩塌（spectral collapse）</b>：</p>
+
+  <div class="thm reveal">
+    <div class="lbl">观测（SpecFormer, arXiv:2607.24025）</div>
+    <p style="margin:6px 0;">对输入嵌入矩阵 \(H\in\mathbb{R}^{T\times d}\) 做奇异值分解 \(H=U\Sigma V^\top\)，\(\Sigma=\operatorname{diag}(\sigma_1,\dots,\sigma_r)\)，\(\sigma_1\ge\sigma_2\ge\cdots\)。推荐场景下谱高度集中：</p>
+    \[\frac{\sigma_1}{\sum_k\sigma_k}\;\text{接近 1},\qquad \sigma_{k\ge2}\le\epsilon\,\sigma_1\quad(\epsilon\ll 1)\]
+    <p style="margin:6px 0;">即<b>第一个奇异值独占几乎全部能量，其余奇异值迅速衰减——谱间隙大</b>。少数主奇异向量支配表示空间，长尾信息所在的次奇异方向被压制。SpecFormer 以奇异值整形（spectral reshaping）量化这一观测：</p>
+    \[\widetilde\Sigma=\operatorname{diag}\!\big(\sigma_1^{\tau},\,\sigma_2^{\tau},\,\dots,\,\sigma_r^{\tau}\big),\qquad
+      \tau=\operatorname{Sigmoid}(a)\in(0,1)\]
+    <p style="margin:6px 0;">指数 \(\tau<1\) 对大奇异值施加压缩、对小奇异值相对保留：\(\sigma_k\mapsto\sigma_k^{\tau}\) 使集中能量重新分布。参数 \(a\) 初始化为 \(\tau\approx0.5\)，随训练自适应——谱整形是一个<b>连续可微的全局重排</b>，作用于嵌入矩阵 \(H\) 本身。</p>
+  </div>
+
+  <div class="figure reveal">
+    <span class="tag red">图 2 · 推荐输入的低秩几何</span>
+    <div class="svgwrap">
+    <svg width="860" height="250" viewBox="0 0 860 250" role="img" aria-label="推荐输入的低秩几何">
+      <rect x="0" y="0" width="860" height="250" rx="12" fill="none"/>
+      <text x="180" y="30" font-size="13" font-weight="700" fill="#ff9f68" text-anchor="middle" font-family="Space Grotesk">(a) token 频次：长尾</text>
+      <g font-family="Inter" font-size="10" fill="#6b7280">
+        <g>
+          <rect x="60" y="150" width="20" height="70" fill="url(#freqBar1)" rx="3"/>
+          <rect x="88" y="172" width="20" height="48" fill="url(#freqBar2)" rx="3"/>
+          <rect x="116" y="186" width="20" height="34" fill="url(#freqBar3)" rx="3"/>
+          <rect x="144" y="196" width="20" height="24" fill="url(#freqBar4)" rx="3"/>
+          <rect x="172" y="204" width="20" height="16" fill="url(#freqBar5)" rx="3"/>
+          <rect x="200" y="210" width="20" height="10" fill="url(#freqBar6)" rx="3"/>
+          <rect x="228" y="215" width="20" height="5" fill="url(#freqBar6)" rx="3" opacity=".7"/>
+          <rect x="256" y="217" width="20" height="3" fill="url(#freqBar6)" rx="3" opacity=".5"/>
+          <rect x="284" y="218" width="20" height="2" fill="url(#freqBar6)" rx="3" opacity=".4"/>
+        </g>
+        <line x1="52" y1="220" x2="320" y2="220" stroke="rgba(15,23,42,.15)"/>
+        <text x="60" y="238" fill="#6b7280">token id（按频次降序）</text>
+        <text x="6" y="196" fill="#6b7280" transform="rotate(-90 8 190)">频次</text>
+        <rect x="336" y="130" width="160" height="78" rx="10" fill="rgba(255,107,107,.05)" stroke="rgba(255,107,107,.2)"/>
+        <text x="336" y="152" fill="#ff9f68">少数 token 反复出现</text>
+        <text x="336" y="170" fill="#46526a">→ 同一请求内高度自相关</text>
+        <text x="336" y="188" fill="#46526a">→ 输入从一开始就低秩</text>
+      </g>
+      <text x="440" y="30" font-size="13" font-weight="700" fill="#ff9f68" text-anchor="middle" font-family="Space Grotesk">(b) 奇异谱：σ₁ 独占能量</text>
+      <g>
+        <rect x="500" y="120" width="26" height="100" fill="#ff6b6b" rx="3"/>
+        <rect x="534" y="212" width="26" height="8" fill="url(#specB)" rx="2"/>
+        <rect x="568" y="216" width="26" height="4" fill="url(#specB)" rx="2" opacity=".8"/>
+        <rect x="602" y="218" width="26" height="2" fill="url(#specB)" rx="2" opacity=".6"/>
+        <rect x="636" y="219" width="26" height="1" fill="url(#specB)" rx="2" opacity=".5"/>
+        <rect x="670" y="219" width="26" height="1" fill="url(#specB)" rx="2" opacity=".4"/>
+        <rect x="704" y="219" width="26" height="1" fill="url(#specB)" rx="2" opacity=".3"/>
+        <rect x="738" y="219" width="26" height="1" fill="url(#specB)" rx="2" opacity=".25"/>
+      </g>
+      <line x1="492" y1="220" x2="782" y2="220" stroke="rgba(15,23,42,.15)"/>
+      <text x="500" y="238" fill="#6b7280">奇异值序号 k</text>
+      <text x="496" y="112" fill="#ff6b6b" font-size="10.5">σ₁ ≫ σ_{k≥2}</text>
+      <rect x="492" y="60" width="290" height="40" rx="10" fill="rgba(255,107,107,.05)" stroke="rgba(255,107,107,.2)"/>
+      <text x="502" y="78" fill="#ff9f68" font-size="11">差异预算 ≈ Σ_{k≥2} σ_k² 几乎为零</text>
+      <text x="502" y="93" fill="#46526a" font-size="10.5">注意力是低通平均 → 仅剩的一点点差异，数层即耗尽</text>
+      <defs>
+        <linearGradient id="freqBar1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ff9f68"/><stop offset="100%" stop-color="#ff6b6b"/></linearGradient>
+        <linearGradient id="freqBar2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffb87a"/><stop offset="100%" stop-color="#ff8a5e"/></linearGradient>
+        <linearGradient id="freqBar3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffd09a"/><stop offset="100%" stop-color="#ffa06a"/></linearGradient>
+        <linearGradient id="freqBar4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe0b8"/><stop offset="100%" stop-color="#ffb77e"/></linearGradient>
+        <linearGradient id="freqBar5" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8a93a3"/><stop offset="100%" stop-color="#5a6272"/></linearGradient>
+        <linearGradient id="freqBar6" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#8a93a3"/><stop offset="100%" stop-color="#6a7284"/></linearGradient>
+        <linearGradient id="specB" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#5f8dff"/><stop offset="100%" stop-color="#1f3a6e"/></linearGradient>
+      </defs>
+    </svg>
+    </div>
+    <figcaption><b>推荐输入的几何。</b> (a) 特征频次长尾：少数 token 反复出现，使请求内嵌入高度自相关；(b) 奇异谱 \(\sigma_1\) 独占几乎全部能量。输入矩阵在注意力<b>之前</b>就已经低秩——这是与语言场景的根本差异。</figcaption>
+  </div>
+
+  <h3 class="reveal">把"差异预算"写成公式</h3>
+  <p class="reveal">把 token 矩阵拆成均值方向与差异方向：</p>
+  \[X=\underbrace{\mathbf{1}\,\bar x^{\top}}_{\text{均值（秩 1）}}+\underbrace{X_{\perp}}_{\text{差异（被逐层压缩）}}\]
+  <p class="reveal">行随机矩阵满足 \(A\mathbf{1}=\mathbf{1}\)，<b>原样保留均值方向</b>；差异方向按次主特征值 \(|\lambda_2|\le1\) 逐层压缩。\(L\) 层后差异能量 \(\approx|\lambda_2|^L\cdot(\text{初始差异})\)，崩塌发生在它降到阈值 \(\delta\) 之下时：</p>
+  \[L^{\star}\;\sim\;\frac{\log\!\left(\sum_{k\ge2}\sigma_k^2/\,\delta\right)}{\log(1/|\lambda_2|)}\]
+
+  <div class="box reveal">
+    <div class="lbl">推荐同时压低分子、放大分母</div>
+    <ul style="margin:6px 0;padding-left:20px;">
+      <li><b>分子小（推荐独有）</b>：低秩输入的差异能量 \(\sum_{k\ge2}\sigma_k^2\) 极小，\(L^{\star}\) 被直接压低；</li>
+      <li><b>分母大（恶性循环）</b>：低秩 \(X\) 使 \(Q,K\) 同源 &rArr; \(A\to\tfrac1T\mathbf{1}\mathbf{1}^{\top}\)，\(|\lambda_2|\to0\)，\(\log(1/|\lambda_2|)\to\infty\)，\(L^{\star}\) 再次缩短。</li>
+    </ul>
+  </div>
+
+  <div class="thm reveal">
+    <div class="lbl">恶性循环（SpecFormer 的正反向刻画）</div>
+    <ul style="margin:6px 0;padding-left:20px;">
+      <li><b>前向（低通滤波）</b>：坍缩的嵌入 \(H\) 生成低秩注意力矩阵 \(A\)。低秩 \(A\) 相当于<b>低通滤波器</b>——它仅沿主导方向平滑 token 表示，次奇异方向的差异被滤除，表示进一步退化；</li>
+      <li><b>反向（梯度饥饿）</b>：低秩注意力把梯度投影到主导子空间，<b>次奇异方向遭受梯度饥饿</b>（gradient starvation），得不到有效更新，下一轮嵌入更坍缩。</li>
+    </ul>
+    <p style="margin:6px 0;">SpecFormer 以 fractional effective rank 度量此过程，并论证前向低通与反向饥饿构成<b>互相加强的闭环</b>。其解法——谱整形 \(\widetilde\Sigma\)——直接作用于该闭环：打破前向的谱集中，使次奇异方向重新获得梯度。这一闭环亦解释了为何推荐 Transformer 在远浅于语言模型的层数即发生崩塌。</p>
+  </div>
+
+  <div class="flow reveal">
+    <div class="step r"><span class="st">低秩输入</span><div class="tx">\(\sigma_1\gg\sigma_{k\ge2}\)，差异预算近零</div></div>
+    <div class="arr">→</div>
+    <div class="step r"><span class="st">前向：低通平均</span><div class="tx">\(A\) 滤除 token 差异</div></div>
+    <div class="arr">→</div>
+    <div class="step o"><span class="st">反向：梯度饥饿</span><div class="tx">次奇异方向收不到梯度</div></div>
+    <div class="arr">→</div>
+    <div class="step g"><span class="st">更低秩的 H</span><div class="tx">闭环加剧，深度饱和提前</div></div>
+  </div>
+
+  <p class="reveal">但整体平均的视角仍停留在"秩 1 极限"的粗粒度描述上，它区分不了<b>是哪些路径</b>在加速这一过程。下一节我们把镜头对准相邻两层之间的路径结构。</p>
+</section>
+
+<!-- ==================== 4. 局部化 ==================== -->
+<section id="sec4" class="act">
+  <div class="kick reveal"><span class="actnum">4</span> LOCALIZATION AND THE BACKTRACKING BIAS</div>
+  <h2 class="title reveal d1">局部化：回溯路径给矩阵连乘带来的偏差<span class="sub">网络科学早就见过同一现象：主特征向量集中在少数 hub 上，谱质量被反复主导放大</span></h2>
+
+  <p class="lead reveal">"低通平均"描述整体混合，但不区分路径。网络科学中有一个平行的现象：当图中存在高度数 hub 时，邻接矩阵的<b>主特征向量会局部化</b>在 hub 及其邻域上——谱质量集中到少数节点，即所谓的<b>局部化（localization）</b>（Martin et al. 2014；Newman 2013）。其根源是一个明确的机制：</p>
+
+  <div class="thm reveal">
+    <div class="lbl">机制 · 矩阵幂的路径计数偏差</div>
+    <p style="margin:6px 0;">邻接矩阵的幂 \((A^2)_{ij}\) 计数从 \(i\) 到 \(j\) 的两步路径。其中形如 \(i\to j\to i\) 的路径回到原点，被重复计入、且不携带跨 token 的新信息。这类<b>回溯路径</b>在 hub 上密集存在，使 hub 及其邻域在矩阵幂中获得虚高的权重，主奇异向量被一次次放大，最终局部化。</p>
+    \[(A^2)_{ij}=\sum_k A_{ik}A_{kj}=\underbrace{\sum_{k\ne i}A_{ik}A_{ki}\,\delta_{ij}}_{\text{回溯（对角）}}+\underbrace{\sum_{k}A_{ik}A_{kj}\,\mathbf{1}_{k\ne i}}_{\text{前向（跨 token）}}\]
+  </div>
+
+  <p class="reveal">注意力矩阵连乘 \(A_\ell A_{\ell-1}\) 遇到完全相同的结构：其中有一类路径，第 \(\ell-1\) 层从 \(i\) 走到 \(j\)，第 \(\ell\) 层又从 \(j\) 回到 \(i\)——走了两步，回到原点，我们称之为<b>回溯（backtrack）</b>。定义其质量：</p>
+
+  <div class="box gold reveal">
+    <div class="lbl">回溯质量</div>
+    \[b_{\ell,i}=\sum_{j\ne i}A_{\ell,ij}\,A_{\ell-1,ji},\qquad
+      R_\ell=\mathrm{OffDiag}\!\left(A_\ell\odot A_{\ell-1}^{\top}\right),\qquad
+      \boldsymbol b_\ell=R_\ell\,\mathbf 1\]
+    <p style="margin:4px 0;">\(A_\ell\odot A_{\ell-1}^{\top}\) 在位置 \((i,j)\) 记录"第 \(\ell\) 层关注 \(j\)"与"第 \(\ell-1\) 层 \(j\) 关注 \(i\)"的乘积——一条互反边对的回溯强度。扣除平凡自注意力后按行求和，得到 token \(i\) 的两步回返总质量 \(b_{\ell,i}\)。于是两步算子被严格分解为</p>
+    \[P_\ell=D_\ell+C_\ell,\qquad D_\ell=\operatorname{Diag}(\boldsymbol b_\ell),\qquad C_\ell=P_\ell-D_\ell\]
+  </div>
+
+  <div class="thm reveal">
+    <div class="lbl">机制一 · 回溯不创造新通道</div>
+    <p style="margin:6px 0;">分解后，\(D_\ell X=[b_{\ell,1}X_1;\dots;b_{\ell,T}X_T]\) 仅对既有 token 方向施加逐点增益，<b>不引入任何跨 token 通道</b>；跨 token 的信息搬运全部由 \(C_\ell\) 承担。若 \(\boldsymbol b_\ell\) 在少数 hub 上显著偏大，连续传播将反复放大这些位置——总能量守恒乃至局部增长，但<b>归一化奇异谱向少数方向集中</b>，有效秩下降显著加速。</p>
+  </div>
+
+  <div class="thm gold reveal d1">
+    <div class="lbl">机制二 · hub 回溯对应特征向量局部化</div>
+    <p style="margin:6px 0;">Martin et al. (2014, arXiv:1401.5093) 在"稀疏、局部树状随机图 + 单一 hub"模型里给出可计算阈值。设背景平均度 \(c\)、hub 期望度 \(d\)。背景模态与 hub 模态近似为</p>
+    \[\lambda_{\mathrm{bulk}}\simeq c+1,\qquad \lambda_{\mathrm{hub}}=\frac{d}{\sqrt{d-c}},\qquad
+      \boxed{\,d>c(c+1)\;\Rightarrow\;\text{hub 模态越过背景谱}\,}\]
+    <p style="margin:6px 0;">越过阈值后，局部化是<b>定量的</b>：hub 特征向量质量 \(v_h^2=\frac{d-2c}{2d-2c}=O(1)\) 集中于 hub 自身，其邻居各承担 \(v_n^2\approx\frac1{d-c}\)，其余节点按 \(O(1/n)\) 消失；逆参与率 \(\mathrm{IPR}=\sum_k v_k^4\) 由背景的 \(O(1/n)\) 升至 \(O(1)\)。这正是 SpecFormer 所述<b>谱崩塌在特征向量层面的等价表述</b>：输入侧"首个奇异值独占能量"，对应图侧"主特征向量局部化于 hub"——<b>同一现象的两套记号</b>，一个写在 \(\Sigma\) 上，一个写在 \(V\) 上。</p>
+  </div>
+
+  <div class="thm reveal">
+    <div class="lbl">机制三 · 局部化 = 谱崩塌的"路径源头"</div>
+    <p style="margin:6px 0;">将两边的记号对齐：SpecFormer 的"谱集中" \(\sigma_1\gg\sigma_{k\ge2}\)，正是 Martin 模型中 hub 模态越过背景谱 \((d>c(c+1))\) 后的主特征向量局部化。区别仅在<b>作用对象</b>——SpecFormer 直接整形 \(\Sigma(H)\)（作用于表示矩阵本身），而局部化视角将同一现象<b>归因于图结构</b>：高回溯质量的 hub 是主导方向的路径级来源。于是问题由"谱已集中，如何重排"转变为"<b>何种路径制造了集中，能否直接移除</b>"。这一转变为下一节构造非回溯算子提供了动机。</p>
+  </div>
+
+  <div class="figure reveal">
+    <span class="tag gold">图 3 · 回溯路径与 hub 局部化</span>
+    <div class="svgwrap">
+    <svg width="900" height="250" viewBox="0 0 900 250" role="img" aria-label="回溯路径与 hub 局部化">
+      <defs>
+        <radialGradient id="hubGlow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ff6b6b" stop-opacity=".25"/><stop offset="100%" stop-color="#ff6b6b" stop-opacity="0"/></radialGradient>
+      </defs>
+      <rect x="0" y="0" width="900" height="250" rx="12" fill="none"/>
+      <text x="200" y="28" font-size="13" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">(a) 一条回溯路径 i→j→i</text>
+
+      <!-- left: single backtrack -->
+      <circle cx="130" cy="130" r="24" fill="#ffffff" stroke="#ff6b6b" stroke-width="2.5"/>
+      <text x="130" y="137" font-size="14" font-weight="700" fill="#ff6b6b" text-anchor="middle" font-family="Space Grotesk">i</text>
+      <circle cx="280" cy="130" r="30" fill="#fff7e0" stroke="#f4c95d" stroke-width="2.5"/>
+      <circle cx="280" cy="130" r="46" fill="url(#hubGlow)"/>
+      <text x="280" y="136" font-size="13" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">j</text>
+      <line x1="154" y1="130" x2="250" y2="130" stroke="#ff6b6b" stroke-width="2.5" opacity=".5"
+        marker-start="url(#arrRed)" marker-end="url(#arrRed)"/>
+      <path d="M130 162 Q205 190 280 162" fill="none" stroke="#ff6b6b" stroke-width="1.6" stroke-dasharray="5,5" opacity=".55">
+        <animate attributeName="stroke-dashoffset" from="0" to="18" dur="1s" repeatCount="indefinite"/>
+      </path>
+      <circle r="6.5" fill="#ff6b6b">
+        <animateMotion dur="1.3s" repeatCount="indefinite" path="M130 130 L280 130"/>
+      </circle>
+      <circle r="6.5" fill="#ff6b6b">
+        <animateMotion dur="1.3s" begin="0.65s" repeatCount="indefinite" path="M280 130 L130 130"/>
+      </circle>
+      <text x="205" y="215" font-size="11.5" fill="#46526a" text-anchor="middle" font-family="JetBrains Mono">b_{ℓ,i} = Σ_{j≠i} A_{ℓ,ij}·A_{ℓ−1,ji}</text>
+      <text x="205" y="234" font-size="11" fill="#6b7280" text-anchor="middle">第 ℓ−1 层去 j，第 ℓ 层又回来：原地空转</text>
+
+      <!-- right: hub localization -->
+      <text x="600" y="28" font-size="13" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">(b) hub 回溯集中 → 局部化</text>
+      <circle cx="600" cy="130" r="30" fill="#fff7e0" stroke="#f4c95d" stroke-width="2.5"/>
+      <circle cx="600" cy="130" r="55" fill="url(#hubGlow)"/>
+      <text x="600" y="136" font-size="12" font-weight="700" fill="#f4c95d" text-anchor="middle" font-family="Space Grotesk">hub</text>
+      <g stroke="#ff6b6b" stroke-width="2" opacity=".45">
+        <line x1="600" y1="160" x2="600" y2="205"/><line x1="600" y1="100" x2="600" y2="55"/>
+        <line x1="600" y1="160" x2="652" y2="197"/><line x1="600" y1="160" x2="548" y2="197"/>
+        <line x1="600" y1="100" x2="652" y2="63"/><line x1="600" y1="100" x2="548" y2="63"/>
+      </g>
+      <g fill="#ffffff" stroke="#ff6b6b" stroke-width="1.8">
+        <circle cx="600" cy="212" r="10"/><circle cx="600" cy="48" r="10"/>
+        <circle cx="660" cy="204" r="10"/><circle cx="540" cy="204" r="10"/>
+        <circle cx="660" cy="56" r="10"/><circle cx="540" cy="56" r="10"/>
+      </g>
+      <g fill="#ff6b6b">
+        <circle r="5"><animateMotion dur="1.5s" repeatCount="indefinite" path="M600 130 L600 212 L600 130"/></circle>
+        <circle r="5"><animateMotion dur="1.5s" begin="0.5s" repeatCount="indefinite" path="M600 130 L660 204 L600 130"/></circle>
+        <circle r="5"><animateMotion dur="1.5s" begin="1s" repeatCount="indefinite" path="M600 130 L540 204 L600 130"/></circle>
+      </g>
+      <!-- IPR bars -->
+      <rect x="700" y="40" width="170" height="190" rx="10" fill="rgba(15,23,42,.04)" stroke="rgba(15,23,42,.12)"/>
+      <text x="785" y="58" font-size="11" fill="#46526a" text-anchor="middle">特征向量质量 v_k²</text>
+      <g fill="#ff6b6b">
+        <rect x="710" y="200" width="14" height="3" rx="1"/><rect x="730" y="200" width="14" height="3" rx="1"/>
+        <rect x="750" y="200" width="14" height="3" rx="1"/><rect x="770" y="200" width="14" height="3" rx="1"/>
+        <rect x="790" y="200" width="14" height="3" rx="1"/><rect x="810" y="200" width="14" height="3" rx="1"/>
+        <rect x="830" y="200" width="14" height="3" rx="1"/>
+        <rect x="850" y="90" width="14" height="110" rx="3"/>
+      </g>
+      <text x="857" y="82" font-size="10" fill="#ff6b6b" text-anchor="middle">hub</text>
+      <text x="785" y="226" font-size="10.5" fill="#6b7280" text-anchor="middle">IPR = Σ v_k⁴ ：O(1/n) → O(1)</text>
+      <text x="785" y="240" font-size="10" fill="#6b7280" text-anchor="middle">谱质量从全网集中到 hub</text>
+    </svg>
+    </div>
+    <figcaption><b>回溯如何推动局部化。</b> (a) 互反边对使质量在 \(i,j\) 之间反复往返；(b) 当回溯集中于请求级 hub 且跨层稳定时，传播算子的主模态局部化于 hub 邻域——逆参与率 \(\mathrm{IPR}=\sum_k v_k^4\) 由 \(O(1/n)\) 升至 \(O(1)\)，归一化奇异谱向少数方向集中。Martin et al. (2014) 给出的阈值为 \(d>c(c+1)\)：越过该阈值，hub 模态 \(d/\sqrt{d-c}\) 超越背景谱 \(c+1\)。</figcaption>
+  </div>
+
+  <div class="box reveal">
+    <div class="lbl">边界说明</div>
+    <p style="margin:4px 0;">上述阈值是<b>固定、无向、稀疏</b>随机图的结果，不能直接当作稠密、有向、随样本变化的注意力矩阵的定理。可迁移的是<b>路径机制</b>：互反边对反复贡献于邻接幂、强化局部主模态。推荐场景的对应假设是——重复 item / 类目 / 意图形成<b>请求级 hub</b>，且高回溯质量与高 IPR、低 \(\sigma_2/\sigma_1\) 同时出现。这是<b>待验证假设</b>，不是从低秩输入自动推出的结论。</p>
+  </div>
+</section>
+
+<!-- ==================== 5. 非回溯算子 ==================== -->
+<section id="sec5" class="act">
+  <div class="kick reveal"><span class="actnum">5</span> THE NON-BACKTRACKING OPERATOR</div>
+  <h2 class="title reveal d1">非回溯算子：移除连乘中的回溯偏差<span class="sub">网络科学的对应解：禁止紧邻的反向边</span></h2>
+
+  <p class="lead reveal">既然回溯路径在矩阵连乘中引入偏差，一个自然的候选修正便是将其精确扣除。网络科学在<b>随机游走、谱中心性、社区检测</b>中遇到相同的局部化问题时，采用的正是这一思路。非回溯算子（Hashimoto 1989；Krzakala et al. 2013）的构造目标即<b>禁止紧邻的反向边</b>。</p>
+
+  <div class="box cy reveal">
+    <div class="lbl">非回溯算子 B：作用在有向边上</div>
+    \[B_{k\to l,\,i\to j}=\delta_{jk}\,(1-\delta_{il})\]
+    <p style="margin:4px 0;">因子 \(1-\delta_{il}\) 精确排除 \(i\to j\to i\)：从边 \(i\!\to\!j\) 只能走到 \(j\!\to\!k\)，<b>一步折返被禁止</b>。Krzakala et al. (2013) 证明，在随机图模型中该算子维持清晰的谱边缘与非零谱间隙，即使平均度很低。</p>
+  </div>
+
+  <div class="thm reveal">
+    <div class="lbl">关键性质：hub 对非回溯谱半径的贡献消失（Martin et al. 2014）</div>
+    <p style="margin:6px 0;">回到上一节的单一 hub 模型。对邻接矩阵，hub 制造了越过背景谱的主导模态 \(d/\sqrt{d-c}\)；对<b>非回溯</b>矩阵，同样的 hub 不再引入新主导特征值——非回溯谱半径的贡献来自</p>
+    \[z\;\approx\;\frac{\langle k^2\rangle-\langle k\rangle}{\langle k\rangle}\;\sim\;c\]
+    <p style="margin:6px 0;">与 hub 度数 \(d\) 无关（这里 \(\langle k\rangle,\langle k^2\rangle\) 为节点度数均值）。换言之：<b>将"立即折返"路径从计数中剔除后，hub 的谱质量贡献被抑制，局部化模态不再成立</b>——此即"非回溯可避免谱崩塌"的理论依据：它所移除的，正是制造主导局部模态的那条路径。这与 SpecFormer 的谱整形<b>同源而分工不同</b>：SpecFormer 对已集中的 \(\Sigma(H)\) 做全局重排，属<b>事后整形</b>；非回溯对产生集中作用的路径做<b>事前剔除</b>。前者重排能量，后者移除来源。</p>
+  </div>
+
+  <div class="thm reveal">
+    <div class="lbl">计数多项式的 degree-two 修正</div>
+    <p style="margin:6px 0;">对固定无向图，计数非回溯游走的多项式满足递推：</p>
+    \[P_0=I,\quad P_1=A,\qquad \boxed{\,P_2=A^2-D\,},\qquad P_k=A\,P_{k-1}-(D-I)\,P_{k-2}\]
+    <p style="margin:6px 0;">其中 \(D_{ii}=\sum_j A_{ij}A_{ji}\)（无权无向图上退化为度矩阵）。<b>\(P_2\) 精确移除长度为 2 的回溯路径</b>：邻接平方后，把"往返同一条边"的对角质量全部扣掉。</p>
+  </div>
+
+  <div class="figure reveal">
+    <span class="tag cy">图 4 · 一个算子的构造</span>
+    <div class="svgwrap">
+    <svg width="760" height="230" viewBox="0 0 760 230" role="img" aria-label="A 平方减去 D 等于非回溯矩阵">
+      <rect x="0" y="0" width="760" height="230" rx="12" fill="none"/>
+      <text x="150" y="34" font-size="13" font-weight="700" fill="#4cc9f0" text-anchor="middle" font-family="Space Grotesk">A² = 两步游走计数</text>
+      <g>
+        <rect x="95" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
+        <rect x="105" y="70" width="18" height="18" rx="4" fill="#ff6b6b"/>
+        <rect x="127" y="70" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="149" y="70" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="171" y="70" width="18" height="18" rx="4" fill="#5f8dff"/>
+        <rect x="105" y="92" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="127" y="92" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="149" y="92" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="171" y="92" width="18" height="18" rx="4" fill="#5f8dff"/>
+        <rect x="105" y="114" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="127" y="114" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="149" y="114" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="171" y="114" width="18" height="18" rx="4" fill="#5f8dff"/>
+        <rect x="105" y="136" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="127" y="136" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="149" y="136" width="18" height="18" rx="4" fill="#5f8dff"/><rect x="171" y="136" width="18" height="18" rx="4" fill="#ff6b6b"/>
+      </g>
+      <text x="150" y="200" font-size="11" fill="#6b7280" text-anchor="middle">对角 = 回返 i→j→i（红）</text>
+      <text x="380" y="150" font-size="26" fill="#6b7280" font-family="Space Grotesk" text-anchor="middle">−</text>
+      <text x="530" y="34" font-size="13" font-weight="700" fill="#4cc9f0" text-anchor="middle" font-family="Space Grotesk">D = 回溯质量</text>
+      <g>
+        <rect x="475" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
+        <rect x="485" y="70" width="18" height="18" rx="4" fill="#ff6b6b"/>
+        <rect x="507" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+        <rect x="485" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="92" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="529" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+        <rect x="485" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="114" width="18" height="18" rx="4" fill="#ff6b6b"/><rect x="551" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+        <rect x="485" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="136" width="18" height="18" rx="4" fill="#ff6b6b"/>
+      </g>
+      <text x="530" y="200" font-size="11" fill="#6b7280" text-anchor="middle">只留对角：全部是回溯</text>
+      <text x="592" y="150" font-size="26" fill="#3ddc97" font-family="Space Grotesk" text-anchor="middle">=</text>
+      <text x="150" y="56" font-size="0"></text>
+      <g>
+        <rect x="600" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
+        <rect x="610" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+        <rect x="632" y="70" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="654" y="70" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="676" y="70" width="18" height="18" rx="4" fill="#3ddc97"/>
+        <rect x="610" y="92" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="632" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="654" y="92" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="676" y="92" width="18" height="18" rx="4" fill="#3ddc97"/>
+        <rect x="610" y="114" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="632" y="114" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="654" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="676" y="114" width="18" height="18" rx="4" fill="#3ddc97"/>
+        <rect x="610" y="136" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="632" y="136" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="654" y="136" width="18" height="18" rx="4" fill="#3ddc97"/><rect x="676" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
+      </g>
+      <text x="655" y="200" font-size="11" fill="#3ddc97" text-anchor="middle">非回溯：对角清零</text>
+    </svg>
+    </div>
+    <figcaption><b>\(P_2=A^2-D\) 的逐格含义。</b> \(A^2\) 的对角元恰等于"两步后回到原点"的回溯总质量；减去对角矩阵 \(D\) 后，对角被置零，跨 token 的"向前"路径保持不变。</figcaption>
+  </div>
+
+  <div class="box reveal">
+    <div class="lbl">血统与边界</div>
+    <p style="margin:4px 0;">TDA 继承的是非回溯理论的<b>路径级构造</b>（degree-two 的 \(A^2-D\)），而非固定图上完整的 Ihara–Bass 谱结论。注意力图稠密、加权、有向且随层变化，不存在现成的完整谱等价。TDA 是 degree-two 截断：移除可明确识别的回溯项；其去局部化与保秩效果，仍需由注意力乘积的 IPR 与奇异谱实验确认。此外，Martin et al. (2014) 指出非回溯矩阵并非对所有结构免疫——例如在团（clique）上仍可能局部化；在注意力语境下，这意味着"整组 token 互相高度关注"的稠密子结构是 TDA 不触及的、可能保留的另一种集中来源。与 SpecFormer 的分工亦由此界定：<b>谱整形重排全部奇异值，TDA 仅剔除回溯路径</b>——前者作用于谱，后者作用于路径。</p>
+  </div>
+</section>
+
+<!-- ==================== 6. TDA ==================== -->
+<section id="sec6" class="act">
+  <div class="kick reveal"><span class="actnum">6</span> NON-BACKTRACKING ATTENTION</div>
+  <h2 class="title reveal d1">TDA：把回溯质量门控地减掉<span class="sub">非回溯注意力（TDA）——一个插件，只改注意力消息，什么都不动</span></h2>
+
+  <p class="lead reveal">将上述思路落地为工程实现：TDA 仅修改<b>注意力消息</b>，tokenization、共享 QKV、残差、FFN、预测头均保持不变。对每个头 \(h\)，利用缓存的相邻层注意力权重构造互反矩阵与回溯质量：</p>
+  \[R_{\ell,h}=\mathrm{OffDiag}\!\big(A_{\ell,h}\odot A_{\ell-1,h}^{\top}\big),\quad
+    \boldsymbol r_{\ell,h}=R_{\ell,h}\,\mathbf 1,\quad
+    D_{\ell,h}=\mathrm{Diag}(\boldsymbol r_{\ell,h})\]
+
+  <div class="box grn reveal">
+    <div class="lbl">TDA 头消息</div>
+    \[\boxed{\;\widetilde M_{\ell,h}\;=\;\underbrace{A_{\ell,h}\,V_{\ell,h}}_{\text{标准消息}}\;-\;\underbrace{\beta_{\ell,h}\,D_{\ell,h}\,P_{\ell,h}\,\bar H_{\ell-1}}_{\text{门控回溯修正}}\;}\]
+    <p style="margin:4px 0;">其中 \(\bar H_{\ell-1}\) 是上一层的归一化历史状态；\(P_{\ell,h}\) 把它投影到 head 维（经济实现<b>复用上一层 \(W_V\)，零额外参数</b>）；\(\beta_{\ell,h}=\sigma(b_{\ell,h})\in[0,1]\) 是每头每层的<b>可学门控</b>，初始化近 0——训练从"未改动的 backbone"起步，修正只在数据真正受益处生长。第 1 层无 \(A_0\) 可用，保持标准注意力。</p>
+  </div>
+
+  <h3 class="reveal">对角算子的作用：逐格的解读</h3>
+  <p class="reveal">为何修正项取形如 \(D_{\ell,h}P_{\ell,h}\bar H_{\ell-1}\)，而非直接作用于本层消息？逐项考察：\(\beta_{\ell,h}\) 为标量门控，\(D_{\ell,h}\) 为纯对角矩阵，\(P_{\ell,h}\bar H_{\ell-1}\) 为上一层表示的投影。整体效果是<b>逐 token 施加一个系数</b>——不搬运任何跨 token 信息，仅按回溯质量缩放每个 token 的历史状态。这与第 4 节的机制一完全一致：回溯不创造新通道，故只应作为逐点的增益加以处理。</p>
+
+  <div class="figure reveal">
+    <span class="tag grn">图 6 · 修正的矩阵观</span>
+    <div class="eqrow" style="gap:20px;">
+      <div>
+        <div class="mat sm">
+          <div class="cell hi-red"></div><div class="cell c2"></div><div class="cell c1"></div><div class="cell c1"></div><div class="cell c2"></div>
+          <div class="cell c2"></div><div class="cell hi-red"></div><div class="cell c2"></div><div class="cell c1"></div><div class="cell c1"></div>
+          <div class="cell c1"></div><div class="cell c2"></div><div class="cell hi-red"></div><div class="cell c2"></div><div class="cell c1"></div>
+          <div class="cell c1"></div><div class="cell c1"></div><div class="cell c2"></div><div class="cell hi-red"></div><div class="cell c2"></div>
+          <div class="cell c2"></div><div class="cell c1"></div><div class="cell c1"></div><div class="cell c2"></div><div class="cell hi-red"></div>
+        </div>
+        <div class="lblm">\(A_\ell A_{\ell-1}\)：对角 = 回溯质量（红）</div>
+      </div>
+      <span class="sym">−</span>
+      <div>
+        <div class="mat sm">
+          <div class="cell hi-red"></div><div class="cell c0"></div><div class="cell c0"></div><div class="cell c0"></div><div class="cell c0"></div>
+          <div class="cell c0"></div><div class="cell hi-red"></div><div class="cell c0"></div><div class="cell c0"></div><div class="cell c0"></div>
+          <div class="cell c0"></div><div class="cell c0"></div><div class="cell hi-red"></div><div class="cell c0"></div><div class="cell c0"></div>
+          <div class="cell c0"></div><div class="cell c0"></div><div class="cell c0"></div><div class="cell hi-red"></div><div class="cell c0"></div>
+          <div class="cell c0"></div><div class="cell c0"></div><div class="cell c0"></div><div class="cell c0"></div><div class="cell hi-red"></div>
+        </div>
+        <div class="lblm">\(\beta_\ell D_\ell\)：门控回溯质量</div>
+      </div>
+      <span class="sym">=</span>
+      <div>
+        <div class="mat sm">
+          <div class="cell c0"></div><div class="cell hi-grn"></div><div class="cell c1"></div><div class="cell c1"></div><div class="cell c2"></div>
+          <div class="cell c2"></div><div class="cell c0"></div><div class="cell hi-grn"></div><div class="cell c1"></div><div class="cell c1"></div>
+          <div class="cell c1"></div><div class="cell c2"></div><div class="cell c0"></div><div class="cell hi-grn"></div><div class="cell c1"></div>
+          <div class="cell c1"></div><div class="cell c1"></div><div class="cell c2"></div><div class="cell c0"></div><div class="cell hi-grn"></div>
+          <div class="cell c2"></div><div class="cell c1"></div><div class="cell c1"></div><div class="cell c2"></div><div class="cell c0"></div>
+        </div>
+        <div class="lblm">非回溯消息：对角压低<br>跨 token 路径保留（绿）</div>
+      </div>
+    </div>
+    <figcaption><b>TDA 的 degree-two 修正。</b> 回溯质量只位于两步算子的对角上（红）；门控减掉后，对角被压低，终点不同于起点的跨 token 路径（绿）原样保留。<b>代数性质本身不保证有效秩提升</b>——秩效应取决于回溯是否局部化，以及跨层乘积的奇异谱。</figcaption>
+  </div>
+
+  <p class="reveal">矩阵观给出一个简洁的代数结论：\(A_\ell A_{\ell-1}\) 的对角元恰为第 4 节定义的"两步回返总质量"，减去 \(\beta_\ell D_\ell\) 后，<b>对角被置零、跨 token 项保持不变</b>。需注意，对角压低仅在"两步算子"层面成立；跨层乘积 \(A_\ell A_{\ell-1}A_{\ell-2}\cdots\) 的谱如何演化，取决于这些非回溯路径在更深乘积中的累积——这正是第 7 节以 row similarity 与 effective rank 检验的对象。</p>
+
+  <div class="box cy reveal">
+    <div class="lbl">实现 · 每块三步，全部低阶</div>
+    <p style="margin:4px 0;">把上面的代数落成可执行逻辑（伪代码，\(@\) 为矩阵乘法，逐头独立）：</p>
+    <div class="codeblock">
+<span class="c"># ── 标准注意力（每块已有，不计入新增）──</span><br>
+<span class="kw">def</span> <span class="fn">attention</span>(H_l):<br>
+&nbsp;&nbsp;A_l = <span class="fn">softmax</span>(LN(H_l)@W_Q @ (LN(H_l)@W_K).T / sqrt(d_h))&nbsp;&nbsp;<span class="c"># O(T²d_h)</span><br>
+&nbsp;&nbsp;M_l = A_l @ (LN(H_l)@W_V)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># O(T²d_h)</span><br>
+&nbsp;&nbsp;<span class="kw">return</span> A_l, M_l<br><br>
+<span class="c"># ── TDA 修正（新增，全部低阶）──</span><br>
+<span class="kw">def</span> <span class="fn">tda</span>(A_l, A_prev, H_prev, beta, W_V):<br>
+&nbsp;&nbsp;R_l = A_l * A_prev.T&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># O(T²)  Hadamard</span><br>
+&nbsp;&nbsp;r_l = R_l.<span class="fn">fill_diagonal_(0)</span>.<span class="fn">sum</span>(dim=1)&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># O(T²)  去对角+行和</span><br>
+&nbsp;&nbsp;D_l = <span class="fn">diag</span>(r_l)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># O(T)   对角算子</span><br>
+&nbsp;&nbsp;M_prev = A_prev @ (LN(H_prev)@W_V)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># O(T²d_h) 复用上一层 V 投影</span><br>
+&nbsp;&nbsp;M_tilde = M_l - beta * D_l @ M_prev&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="c"># O(Td)  门控减法</span><br>
+&nbsp;&nbsp;<span class="kw">return</span> M_tilde<br><br>
+<span class="hl2"><span class="c"># 新增总开销 = O(T²) + O(T²) + O(T) + O(Td) = O(T² + Td) 每头</span></span><br>
+<span class="hl"><span class="c"># 对 H 头：O(HT² + Td)，低于注意力本身 O(T²d)（因 d_h ≫ 1）</span></span><br>
+<span class="c"># 且 P 复用上一层 W_V → 不引入任何新参数</span>
+    </div>
+    <p style="margin:4px 0;">互反对积 \(A_\ell\odot A_{\ell-1}^{\top}\) 与行和 \(O(HT^2)\)（缓存 \(O(HT^2)\)）；历史投影复用上一层 \(W_V\)，\(O(Td)\)；对角修正与减法 \(O(Td)\)。总计每块 <b>\(O(HT^2+Td)\)</b>——相对注意力本身的 \(O(T^2d)\) 低一个 \(d_h\) 因子，相对谱整形的 \(O(T^2d+Td^2)\) 可以忽略。短序列推荐（\(T\approx59\)）实测开销约 2–3% FLOPs。</p>
+  </div>
+
+  <h3 class="reveal">四条性质</h3>
+  <div class="thm reveal">
+    <div class="lbl">定理 1 · 回溯精确抵消</div>
+    <p style="margin:6px 0;">令 \(D_{\ell,ii}=\sum_{j\ne i}A_{\ell,ij}A_{\ell-1,ji}\)，则 \((A_\ell A_{\ell-1}-D_\ell)H_{\ell-1}\) 等于所有加权两步路径的聚合，<b>除去</b>回溯 \(i\!\to\!j\!\to\!i\)。</p>
+  </div>
+  <div class="thm reveal d1">
+    <div class="lbl">定理 2 · 置换等变</div>
+    <p style="margin:6px 0;">对任意 token 置换 \(\Pi\)：\(\widetilde M'_\ell=\Pi\,\widetilde M_\ell\)。重排 token 顺序，修正随之重排——结构是 token-order invariant 的。</p>
+  </div>
+  <div class="thm reveal d2">
+    <div class="lbl">命题 3 · 有界性</div>
+    <p style="margin:6px 0;">若 \(A_\ell,A_{\ell-1}\) 非负行随机，则 \(0\le r_{\ell,i}\le1\)，且 \(\lVert\beta_\ell D_\ell X\rVert_{\infty,2}\le\lVert X\rVert_{\infty,2}\)。修正<b>不会放大单行范数</b>——它是压缩而非放大，数值上是安全的。</p>
+  </div>
+  <div class="thm grn reveal d3">
+    <div class="lbl">命题 4 · 因果 no-op</div>
+    <p style="margin:6px 0;">若 \(A_{\ell,ij}A_{\ell-1,ji}=0\ (\forall i\ne j)\)，则 \(D_\ell=0\)，TDA 退化为标准注意力。特别地，<b>同一因果序的两层序列注意力</b>满足此条件——TDA 不会在纯因果序列子图上产生修正，只作用于推荐场景独有的<b>双向异质交互</b>。</p>
+  </div>
+</section>
+
+<!-- ==================== 7. 观测结论 ==================== -->
+<section id="sec7" class="act">
+  <div class="kick reveal"><span class="actnum">7</span> EMPIRICAL OBSERVATION</div>
+  <h2 class="title reveal d1">观测：TDA 让崩塌更慢<span class="sub">以行相似度与有效秩两个量纲，度量注意力矩阵随深度的退化速率</span></h2>
+
+  <p class="lead reveal">若上述路径机制成立，则存在一个可检验的预测：移除回溯路径后，注意力矩阵（及其跨层乘积）的退化应被<b>减缓</b>——各行不再快速地趋向一致，有效秩不再快速地滑向 1。以下给出以 <b>row similarity</b> 与 <b>effective rank</b> 为度量的对比观测。</p>
+
+  <div class="thm reveal">
+    <div class="lbl">两个量纲</div>
+    <ul style="margin:6px 0;padding-left:20px;">
+      <li><b>row similarity</b>：行间两两余弦相似度的均值，刻画"各行是否趋同于同一均值向量"；越接近 1 表示崩塌越深。</li>
+      <li><b>effective rank</b>：\(\mathrm{erank}(A)=\exp\!\left(-\sum_k p_k\log p_k\right)\)，其中 \(p_k=\sigma_k^2/\sum_k\sigma_k^2\) 为归一化奇异值能量；有效秩越低表示谱越集中。</li>
+    </ul>
+  </div>
+
+  <div class="figure reveal">
+    <span class="tag grn">图 5 · 崩塌速率对比</span>
+    <div class="imgwrap">
+      <img src="conclusion_row_sim_effrank.png" alt="row similarity 与 effective rank 随层数的演化：TDA 崩塌更慢">
+    </div>
+    <figcaption><b>观测到的定性结论。</b> 上图按层数刻画标准注意力与 TDA 的 <b>row similarity</b> 与 <b>effective rank</b> 曲线。标准注意力的行相似度更快逼近 1、有效秩更快滑向低值；TDA 的两条曲线均明显更为平缓——即<b>崩塌更慢</b>。本图仅作现象层面的示意，具体数值需以正式实验复现为准。</figcaption>
+  </div>
+
+  <div class="box grn reveal">
+    <div class="lbl">小结</div>
+    <p style="margin:4px 0;">标准注意力的深层乘积趋向低有效秩；TDA 从相邻两层读出回溯质量并施加门控修正后，行相似度与有效秩的退化均被<b>减缓</b>。这是与"回溯路径加速崩塌"假设一致的间接证据，其因果性与普适性仍有待更系统的实验验证。</p>
+  </div>
+</section>
+
+<!-- ==================== 终章：逻辑链 ==================== -->
+<section id="finale" class="act">
+  <div class="kick reveal"><span class="actnum">终章</span> THE CHAIN</div>
+  <h2 class="title reveal d1">整条逻辑链<span class="sub">从输入几何到网络科学，一条线把所有环节串起来</span></h2>
+
+  <div class="tl">
+    <div class="item reveal" style="--c:#2563eb;">
+      <span class="node"></span>
+      <div class="card">
+        <h4>① 深度崩塌（一般机制）</h4>
+        <p>行随机连乘趋向秩 1：\(A_L\cdots A_1\to\mathbf{1}\,\boldsymbol p^{\top}\)。语言模型用残差缩放减缓它。</p>
+      </div>
+    </div>
+    <div class="item reveal d1" style="--c:#ea580c;">
+      <span class="node"></span>
+      <div class="card">
+        <h4>② 推荐输入低秩</h4>
+        <p>奇异谱集中：\(\sigma_1\gg\sigma_{k\ge2}\)，谱间隙大。差异预算 \(\sum_{k\ge2}\sigma_k^2\) 极小，\(L^{\star}\) 被压低。</p>
+      </div>
+    </div>
+    <div class="item reveal d2" style="--c:#b45309;">
+      <span class="node"></span>
+      <div class="card">
+        <h4>③ 局部化（网络科学视角）</h4>
+        <p>回溯路径 \(i\!\to\!j\!\to\!i\) 在请求级 hub 上反复往返，给矩阵连乘引入偏差，主奇异向量被持续放大。</p>
+      </div>
+    </div>
+    <div class="item reveal d3" style="--c:#7c3aed;">
+      <span class="node"></span>
+      <div class="card">
+        <h4>④ 非回溯算子</h4>
+        <p>精确扣除回溯偏差：\(P_2=A^2-D\)（Hashimoto 1989；Krzakala et al. 2013；Martin et al. 2014）。</p>
+      </div>
+    </div>
+    <div class="item reveal d4" style="--c:#0891b2;">
+      <span class="node"></span>
+      <div class="card">
+        <h4>⑤ TDA：门控减回溯</h4>
+        <p>缓存相邻层注意力、读出回溯质量、门控减去。row similarity 与 effective rank 的退化均放缓。</p>
+      </div>
+    </div>
+    <div class="item reveal d5" style="--c:#059669;">
+      <span class="node"></span>
+      <div class="card">
+        <h4>⑥ 待验证</h4>
+        <p>路径机制、局部化阈值与崩塌减速的因果性，仍需在真实推荐数据上以系统实验确认。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="box gold reveal">
+    <div class="lbl">结语</div>
+    <p style="margin:4px 0;">排序 Transformer 的深度天花板，可能不仅来自输入的低秩，还来自一条被回溯路径持续放大的局部化通道。识别并扣除它，是加深深度的一条可行路径。</p>
+  </div>
+</section>
+
+<div class="foot">
+  <span class="badge">Make it Deeper</span>
+  <span>本文为方法层面的图示化导引；数值结果需以正式实验替换。文中阈值与定理均标注来源，转引需谨慎。</span>
+</div>
+
+<div class="refs" style="margin-top:16px;">
+  <b>参考文献</b>
+  <ol style="padding-left:20px;margin:8px 0 0;">
+    <li>Dong et al. 2021. Attention is not all you need: pure attention loses rank doubly exponentially with depth. ICML 2021. arXiv:2103.03404.</li>
+    <li>Noci et al. 2022. Signal Propagation in Transformers: Theoretical Perspectives and the Role of Rank Collapse. arXiv:2206.03126.</li>
+    <li>Saada et al. 2024. Mind the Gap: a Spectral Analysis of Rank Collapse and Signal Propagation in Transformers. arXiv:2410.07799.</li>
+    <li>Cui et al. 2026. SpecFormer: Mitigating Embedding and Attention Collapse via Spectral-Aware Transformer for Recommendation. arXiv:2607.24025.</li>
+    <li>Martin, Zhang &amp; Newman 2014. Localization and centrality in networks. Phys. Rev. E 90, 052808. arXiv:1401.5093.</li>
+    <li>Krzakala et al. 2013. Spectral redemption: clustering sparse networks. PNAS 110(52). arXiv:1306.5550.</li>
+    <li>Newman 2013. Spectral community detection in sparse networks. arXiv:1308.6494.</li>
+    <li>Hashimoto 1989. Zeta functions of finite graphs and representations of p-adic groups. Adv. Stud. Pure Math. 15, 211–280.</li>
+  </ol>
+</div>
+
+</main>
+
+<script>
+(function(){
+  var p=document.getElementById('prog');
+  var navA=Array.prototype.slice.call(document.querySelectorAll('nav a'));
+  function onScroll(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    p.style.width=(max>0?(h.scrollTop/max*100):0)+'%';
+    var y=h.scrollTop+120;
+    var cur=null;
+    document.querySelectorAll('section.act').forEach(function(s){
+      if(s.offsetTop<=y)cur=s;
+    });
+    navA.forEach(function(a){
+      a.classList.toggle('on',cur&&a.getAttribute('href')==='#'+cur.id);
+    });
+    var vh=window.innerHeight||h.clientHeight;
+    document.querySelectorAll('.reveal:not(.in)').forEach(function(el){
+      if(el.getBoundingClientRect().top<vh-40){el.classList.add('in');}
+    });
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+  onScroll();
+  setTimeout(onScroll,300);
+  window.addEventListener('load',onScroll);
+
+  var io=('IntersectionObserver' in window)?new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}
+    });
+  },{threshold:.12,rootMargin:'0px 0px -40px 0px'}):null;
+  if(io){document.querySelectorAll('.reveal:not(.in)').forEach(function(el){io.observe(el);});}
+})();
+</script>
+</body>
+</html>

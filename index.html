@@ -956,48 +956,6 @@ a:hover{text-decoration:underline;}
     <p style="margin:6px 0;">其中 \(D_{ii}=\sum_j A_{ij}A_{ji}\)（无权无向图上退化为度矩阵）。<b>\(P_2\) 精确移除长度为 2 的回溯路径</b>：邻接平方后，把"往返同一条边"的对角质量全部扣掉。</p>
   </div>
 
-  <div class="figure reveal">
-    <span class="tag cy">图 6 · 一个算子的构造</span>
-    <div class="svgwrap">
-    <svg width="760" height="230" viewBox="0 0 760 230" role="img" aria-label="A 平方减去 D 等于非回溯矩阵">
-      <rect x="0" y="0" width="760" height="230" rx="12" fill="none"/>
-      <text x="150" y="34" font-size="13" font-weight="700" fill="#4C72B0" text-anchor="middle" font-family="Inter, sans-serif">A² = 两步游走计数</text>
-      <g>
-        <rect x="95" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
-        <rect x="105" y="70" width="18" height="18" rx="4" fill="#C44E52"/>
-        <rect x="127" y="70" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="149" y="70" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="171" y="70" width="18" height="18" rx="4" fill="#7B96C4"/>
-        <rect x="105" y="92" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="127" y="92" width="18" height="18" rx="4" fill="#C44E52"/><rect x="149" y="92" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="171" y="92" width="18" height="18" rx="4" fill="#7B96C4"/>
-        <rect x="105" y="114" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="127" y="114" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="149" y="114" width="18" height="18" rx="4" fill="#C44E52"/><rect x="171" y="114" width="18" height="18" rx="4" fill="#7B96C4"/>
-        <rect x="105" y="136" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="127" y="136" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="149" y="136" width="18" height="18" rx="4" fill="#7B96C4"/><rect x="171" y="136" width="18" height="18" rx="4" fill="#C44E52"/>
-      </g>
-      <text x="150" y="200" font-size="11" fill="#6b7280" text-anchor="middle">对角 = 回返 i→j→i（红）</text>
-      <text x="380" y="150" font-size="26" fill="#6b7280" font-family="Inter, sans-serif" text-anchor="middle">−</text>
-      <text x="530" y="34" font-size="13" font-weight="700" fill="#4C72B0" text-anchor="middle" font-family="Inter, sans-serif">D = 回溯质量</text>
-      <g>
-        <rect x="475" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
-        <rect x="485" y="70" width="18" height="18" rx="4" fill="#C44E52"/>
-        <rect x="507" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="485" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="92" width="18" height="18" rx="4" fill="#C44E52"/><rect x="529" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="485" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="114" width="18" height="18" rx="4" fill="#C44E52"/><rect x="551" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="485" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="507" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="529" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="551" y="136" width="18" height="18" rx="4" fill="#C44E52"/>
-      </g>
-      <text x="530" y="200" font-size="11" fill="#6b7280" text-anchor="middle">只留对角：全部是回溯</text>
-      <text x="592" y="150" font-size="26" fill="#55A868" font-family="Inter, sans-serif" text-anchor="middle">=</text>
-      <text x="150" y="56" font-size="0"></text>
-      <g>
-        <rect x="600" y="60" width="110" height="110" rx="8" fill="#e9edf3" stroke="rgba(15,23,42,.12)"/>
-        <rect x="610" y="70" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-        <rect x="632" y="70" width="18" height="18" rx="4" fill="#55A868"/><rect x="654" y="70" width="18" height="18" rx="4" fill="#55A868"/><rect x="676" y="70" width="18" height="18" rx="4" fill="#55A868"/>
-        <rect x="610" y="92" width="18" height="18" rx="4" fill="#55A868"/><rect x="632" y="92" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="654" y="92" width="18" height="18" rx="4" fill="#55A868"/><rect x="676" y="92" width="18" height="18" rx="4" fill="#55A868"/>
-        <rect x="610" y="114" width="18" height="18" rx="4" fill="#55A868"/><rect x="632" y="114" width="18" height="18" rx="4" fill="#55A868"/><rect x="654" y="114" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/><rect x="676" y="114" width="18" height="18" rx="4" fill="#55A868"/>
-        <rect x="610" y="136" width="18" height="18" rx="4" fill="#55A868"/><rect x="632" y="136" width="18" height="18" rx="4" fill="#55A868"/><rect x="654" y="136" width="18" height="18" rx="4" fill="#55A868"/><rect x="676" y="136" width="18" height="18" rx="4" fill="rgba(15,23,42,.06)"/>
-      </g>
-      <text x="655" y="200" font-size="11" fill="#55A868" text-anchor="middle">非回溯：对角清零</text>
-    </svg>
-    </div>
-    <figcaption><b>\(P_2=A^2-D\) 的逐格含义。</b> \(A^2\) 的对角元恰等于"两步后回到原点"的回溯总质量；减去对角矩阵 \(D\) 后，对角被置零，跨 token 的"向前"路径保持不变。</figcaption>
-  </div>
-
   <div class="box reveal">
     <div class="lbl">理论来源与适用边界</div>
     <p style="margin:4px 0;">TDA 继承的是非回溯理论的<b>路径级构造</b>（degree-two 的 \(A^2-D\)），而非固定图上完整的 Ihara–Bass 谱结论。注意力图稠密、加权、有向且随层变化，不存在现成的完整谱等价。应将 TDA 理解为 degree-two 截断：移除可明确识别的回溯项；其去局部化与保秩效果，仍需由注意力乘积的 IPR 与奇异谱实验确认（§7 给出初步观测）。此外，Martin et al. (2014) 指出非回溯矩阵并非对所有结构免疫——例如在团（clique）上仍可能局部化；在注意力语境下，这意味着"整组 token 互相高度关注"的稠密子结构是 TDA 不触及的、可能残留的另一种集中来源。与 SpecFormer 的分工亦由此界定：<b>谱整形重排全部奇异值，TDA 仅剔除回溯路径</b>——前者作用于谱（须逐层 SVD），后者作用于路径（仅 Hadamard 积与对角运算）。正因如此，TDA 避开谱整形的主要风险：均匀软化全部奇异值可能造成<b>过度坍缩（over-collapse）</b>，抹去有益的主导方向；TDA 只移除回返路径族，其余谱结构原样保留。</p>
@@ -1023,7 +981,7 @@ a:hover{text-decoration:underline;}
   <p class="reveal">为何修正项取形如 \(D_{\ell,h}\bar M_{\ell-1,h}\)，而非直接作用于本层消息？逐项考察：\(\beta_{\ell,h}\) 为标量门控，\(D_{\ell,h}\) 为纯对角矩阵，\(\bar M_{\ell-1,h}\) 为已缓存的上一层消息。整体效果是逐 token 施加一个系数——不搬运任何跨 token 信息，仅按回溯质量缩放每个 token 的历史状态。这与 §4 的性质一一致：回溯不创造新通道，故只应作为逐点的增益加以处理。</p>
 
   <div class="figure reveal">
-    <span class="tag grn">图 7 · 修正的矩阵观</span>
+    <span class="tag grn">图 6 · 修正的矩阵观</span>
     <div class="eqrow" style="gap:20px;">
       <div>
         <div class="mat sm">
@@ -1177,7 +1135,7 @@ a:hover{text-decoration:underline;}
   </div>
 
   <div class="figure reveal">
-    <span class="tag grn">图 8 · 崩塌速率对比</span>
+    <span class="tag grn">图 7 · 崩塌速率对比</span>
     <div class="imgwrap">
       <img src="conclusion_row_sim_effrank.png" alt="row similarity 与 effective rank 随层数的演化：TDA 崩塌更慢">
     </div>

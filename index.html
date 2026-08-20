@@ -9,7 +9,7 @@
 window.MathJax = {
   tex: { inlineMath: [['\\(','\\)'],['$','$']], displayMath: [['\\[','\\]'],['$$','$$']], processEscapes: true, packages: {'[+]':['ams']} },
   chtml: { scale: 0.97 },
-  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code'] }
+  options: { skipHtmlTags: ['script','noscript','style','textarea','pre','code','svg','text'] }
 };
 </script>
 <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -123,7 +123,7 @@ svg{max-width:100%;height:auto;display:block;}
 .mat{display:inline-grid;gap:2px;padding:5px;background:#fff;border-radius:8px;
   border:1px solid var(--line);vertical-align:middle;box-shadow:0 1px 4px rgba(15,23,42,.05);}
 .mat.sm{grid-template-columns:repeat(5,auto);}
-.cell{width:20px;height:20px;border-radius:4px;}
+.mat .cell{width:20px;height:20px;border-radius:4px;}
 .mat.sm .cell{width:16px;height:16px;}
 .c0{background:rgba(15,23,42,.06);}
 .c1{background:rgba(37,99,235,.20);}
@@ -372,10 +372,10 @@ a:hover{text-decoration:underline;}
   <p class="lead reveal">语言建模中的 Transformer 几乎可以无限加深，深度成为可扩展的维度；而在广告、排序与推荐场景，统一的排序 Transformer 堆叠至约 6–8 层时增益便趋于平缓，继续加深反而可能更差。二者采用相同的注意力机制与残差结构，因此差异必然源于别处。本文沿三个逐步收紧的环节展开，尽量以符号推进论证：</p>
 
   <div class="tldr">
-    <div class="cell reveal"><div class="n">①</div><div class="c">深度崩塌是注意力的一般机制：行随机矩阵连乘趋向秩 1，即 \(A_L\cdots A_1\to\mathbf{1}\,\boldsymbol p^\top\)</div></div>
-    <div class="cell reveal d1"><div class="n">②</div><div class="c">推荐输入低秩：奇异谱集中于首个奇异值、谱间隙大，使崩塌提前至 \(O(1)\) 层</div></div>
-    <div class="cell reveal d2"><div class="n">③</div><div class="c">局部化：回溯路径 \(i\to j\to i\) 对矩阵连乘引入偏差，主奇异向量被反复放大，加速有效秩下降</div></div>
-    <div class="cell reveal d3"><div class="n">④</div><div class="c">非回溯算子 \(P_2=A^2-D\) 移除该偏差；TDA 以 \(O(HT^2+Td)\) 的额外开销实现</div></div>
+    <div class="cell reveal"><div class="n">①</div><div class="c">秩崩塌是注意力的一般机制：行随机矩阵之积逐层收敛到秩 1 退化型，即 \(A_L\cdots A_1\to\mathbf{1}\,\boldsymbol p^\top\)</div></div>
+    <div class="cell reveal d1"><div class="n">②</div><div class="c">推荐输入具低秩谱：奇异值集中于首值、谱间隙显著，收缩速率由次主导奇异值 \(|\lambda_2|\) 决定，崩塌被提前至 \(O(1)\) 层</div></div>
+    <div class="cell reveal d2"><div class="n">③</div><div class="c">局部化：回溯路径 \(i\to j\to i\) 对连乘引入可辨识的偏差，主导特征向量被反复放大，加速有效秩的下降</div></div>
+    <div class="cell reveal d3"><div class="n">④</div><div class="c">非回溯算子 \(P_2=A^2-D\) 在路径层移除该偏差；TDA 以 \(O(HT^2+Td)\) 的附加开销实现之</div></div>
   </div>
 </section>
 
@@ -384,7 +384,7 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">2</span> RANK COLLAPSE IN DEPTH</div>
   <h2 class="title reveal d1">深层崩塌：行随机连乘趋向秩 1<span class="sub">注意力的一次加权平均本质，是后续一切讨论的出发点</span></h2>
 
-  <p class="lead reveal">记输入 token 矩阵为 \(X\in\mathbb{R}^{T\times d}\)。标准自注意力先经线性投影，再对各行施加 softmax 归一化：</p>
+  <p class="lead reveal">记第 \(\ell\) 层输入 token 矩阵为 \(X^{\ell}\in\mathbb{R}^{T\times d}\)，其中 \(T\) 为序列长度、\(d\) 为表示维度。标准自注意力先经线性投影 \(Q_{\ell}=X^{\ell}W^{Q},\; K_{\ell}=X^{\ell}W^{K},\; V_{\ell}=X^{\ell}W^{V}\)，再对各行施加 softmax 归一化：</p>
 
   <div class="box reveal">
     <div class="lbl">注意力权重是行随机矩阵</div>
@@ -399,7 +399,7 @@ a:hover{text-decoration:underline;}
     \[H^{(L)}\;\propto\;A_L\,A_{L-1}\cdots A_1\,V\]
   </div>
 
-  <p class="reveal">行随机矩阵的连乘具有已知的代数性质：各行的均值方向被不断对齐，最终收敛到秩 1 矩阵。</p>
+  <p class="reveal">把 \(\{A_\ell\}\) 视为一列行随机矩阵时，其连乘继承了经典马尔可夫链的代数结构：各行均值方向被逐层对齐，混合时间由次主导特征值的模 \(|\lambda_2(A_\ell)|\) 控制，差异方向按 \(\prod_\ell|\lambda_2^{(\ell)}|\) 衰减；在一致遍历条件下，乘积收敛到秩 1 的退化投影 \(\mathbf{1}\boldsymbol p^\top\)。换言之——<b>深度本身并不产生新信息，它只是概率质量的一次次转移；而多次转移的极限，是把全部质量押到单一稳态方向</b>。这一结论与具体数据无关，是注意力加权平均本质的直接推论。</p>
 
   <div class="thm reveal">
     <div class="lbl">命题 · 秩崩塌</div>
@@ -425,7 +425,7 @@ a:hover{text-decoration:underline;}
       <line x1="500" y1="40" x2="500" y2="200" stroke="rgba(255,255,255,.06)"/>
 
       <!-- panel 1: scattered clusters -->
-      <text x="120" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">输入 $V$：各行差异显著</text>
+      <text x="120" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">输入 V：各行差异显著</text>
       <g>
         <circle cx="70" cy="110" r="26" fill="url(#cl1)"/><circle cx="82" cy="98" r="10" fill="url(#cl1)"/><circle cx="58" cy="122" r="8" fill="url(#cl1)"/>
         <circle cx="150" cy="70" r="24" fill="url(#cl2)"/><circle cx="140" cy="82" r="9" fill="url(#cl2)"/><circle cx="160" cy="60" r="7" fill="url(#cl2)"/>
@@ -436,7 +436,7 @@ a:hover{text-decoration:underline;}
       <text x="120" y="215" font-size="11" fill="#6b7280" text-anchor="middle">有效秩 ≈ T · 差异预算充足</text>
 
       <!-- panel 2: pulled to center -->
-      <text x="370" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">乘 $A_1$：一次平均后</text>
+      <text x="370" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">乘 A1：一次平均后</text>
       <g>
         <circle cx="360" cy="105" r="24" fill="url(#cl1)"/><circle cx="368" cy="96" r="9" fill="url(#cl1)"/>
         <circle cx="388" cy="118" r="22" fill="url(#cl2)"/><circle cx="396" cy="110" r="8" fill="url(#cl2)"/>
@@ -448,12 +448,12 @@ a:hover{text-decoration:underline;}
       <text x="370" y="215" font-size="11" fill="#6b7280" text-anchor="middle">差异被压缩，开始互相重叠</text>
 
       <!-- panel 3: single blob -->
-      <text x="630" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">连乘 $A_L\cdots A_1$：秩 1</text>
+      <text x="630" y="28" font-size="12" font-weight="700" fill="#46526a" text-anchor="middle" font-family="Space Grotesk">连乘 A_L...A_1：秩 1</text>
       <circle cx="630" cy="128" r="30" fill="url(#cl6)" opacity=".95"/>
       <circle cx="622" cy="120" r="20" fill="url(#cl1)" opacity=".8"/>
       <circle cx="638" cy="134" r="16" fill="url(#cl2)" opacity=".8"/>
       <circle cx="630" cy="120" r="8" fill="#1a2332" opacity=".5"/>
-      <text x="630" y="215" font-size="11" fill="#ff6b6b" text-anchor="middle">所有 token 塌成一点 → $\mathbf{1}\,\boldsymbol p^\top$</text>
+      <text x="630" y="215" font-size="11" fill="#ff6b6b" text-anchor="middle">所有 token 塌成一点 → 秩 1</text>
 
       <!-- arrows -->
       <g stroke="#8a93a3" stroke-width="1.6" fill="none">

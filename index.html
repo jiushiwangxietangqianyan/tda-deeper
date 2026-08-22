@@ -388,9 +388,9 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">1</span> INTRODUCTION</div>
   <h2 class="title reveal d1">同一个结构，两种深度命运<span class="sub">相同的 self-attention、相同的残差结构——为什么一个能变深，一个在浅层就饱和？</span></h2>
 
-  <p class="lead reveal">增加深度是 Transformer 语言模型最稳定的可扩展维度之一；而在推荐与排序场景，序列/生成式排序 Transformer 通常堆叠至约 6–8 层即告饱和，继续加深增益递减甚至转负。二者采用相同的注意力机制与残差结构，深度收益却相差一个量级——这一反差要求一个机制层面的解释，而非工程层面的经验描述。</p>
+  <p class="lead reveal">沿深度扩展（depth scaling）是 Transformer 语言模型最稳定的 scaling 维度之一；而在推荐与排序场景，序列/生成式排序模型（ranking model）通常堆叠至约 6–8 层即告饱和，继续加深增益递减甚至转负【需补充：内部基线的层数–收益曲线】。二者采用相同的注意力机制与残差（residual）结构，深度收益却相差一个量级——这一反差要求机制层面的解释，而非工程经验的罗列。</p>
 
-  <p class="reveal">已有研究给出两条互补的线索。其一，Noci et al.（2022, arXiv:2206.03126）证明：行随机注意力矩阵的跨层乘积使 token 相关性随深度以幂律上升，且在秩 1 处对 \(Q,K\) 的梯度严格为零——深度崩塌是 Transformer 固有的性质，与具体数据无关。其二，Cui et al.（2026, arXiv:2607.24025, SpecFormer）进一步指出，推荐场景将这一退化显著提前：长尾 item 分布与用户行为序列的集中，使输入嵌入矩阵先天低秩、谱间隙狭窄，前向低通滤波与反向梯度饥饿构成正反馈，崩塌于是发生在 \(O(1)\) 层，而非随深度渐近显现。</p>
+  <p class="reveal">已有研究给出两条互补的线索。其一，Noci et al.（2022, arXiv:2206.03126）证明：行随机注意力矩阵的跨层乘积使 token 相关性随深度以幂律上升，且在秩 1 处对 \(Q,K\) 的梯度严格为零——深度崩塌（即秩崩塌，rank collapse）是 Transformer 固有的性质，与具体数据无关。其二，Cui et al.（2026, arXiv:2607.24025, SpecFormer）进一步指出，推荐场景将这一退化显著提前：长尾 item 分布与用户行为序列的集中，使输入嵌入矩阵先天低秩、谱间隙狭窄，前向低通滤波与反向梯度饥饿构成正反馈，崩塌于是发生在 \(O(1)\) 层，而非随深度渐近显现。</p>
 
   <p class="reveal">然而，以谱干预直接治疗谱症状并非没有代价：谱整形须对每层嵌入矩阵执行奇异值分解并重排全部奇异值，\(O(T^2d+Td^2)\) 的附加开销与注意力主体同阶，且 SVD 算子难以像稠密矩阵乘那样充分利用加速硬件。这自然引出另一个问题：是否存在完全不经特征分解的治疗——只以低阶矩阵代数，既守住深层的秩，又不增加部署负担？本文给出两个在矩阵语言中同构的答案：其一在 \(T\times T\) 的 token 图上——先诊断是哪些路径制造了谱集中（§2–§4），再以非回溯算子将其精确移除（§5–§6），附加开销 \(O(HT^2+Td)\) 与 OneTrans 骨干同量级；其二出自线性注意力：KDA 的 delta 规则在 \(d\times d\) 的快权重状态上执行同类扣除，并与 TDA 在 OneTrans 内形成天然分工（§8）。§9 将二者收拢为统一的方法论。论证按以下四步展开，全文符号统一（符号表见 §2 开头）：</p>
 
@@ -434,7 +434,7 @@ a:hover{text-decoration:underline;}
   <div class="box reveal">
     <div class="lbl">注意力权重是行随机矩阵</div>
     \[A_\ell=\mathrm{softmax}_{\mathrm{row}}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)\in\mathbb{R}^{T\times T}\]
-    <p style="margin:4px 0;">\((A_\ell)_{ij}\) 为 token \(i\) 分配给 token \(j\) 的注意力权重。各行非负且归一，满足 \(A_\ell\mathbf{1}=\mathbf{1}\)，故 <b>\(A_\ell\) 是行随机矩阵</b>：它不改变总质量，仅决定每一行的质量分配。</p>
+    <p style="margin:4px 0;">\((A_\ell)_{ij}\) 为 token \(i\) 分配给 token \(j\) 的注意力权重。各行非负且归一，满足 \(A_\ell\mathbf{1}=\mathbf{1}\)，故 <b>\(A_\ell\) 是行随机矩阵</b>（row-stochastic matrix）：它不改变总质量，仅决定每一行的质量分配。</p>
   </div>
 
   <div class="box reveal d1">
@@ -444,7 +444,7 @@ a:hover{text-decoration:underline;}
     \[H^{(L)}\;\propto\;A_L\,A_{L-1}\cdots A_1\,V\]
   </div>
 
-  <p class="reveal">把 \(\{A_\ell\}\) 视为一列行随机矩阵时，其连乘继承了经典马尔可夫链的代数结构：各行均值方向被逐层对齐，混合时间由次主导特征值的模 \(|\lambda_2(A_\ell)|\) 控制，差异方向按 \(\prod_\ell|\lambda_2^{(\ell)}|\) 衰减；在一致遍历条件下，乘积收敛到秩 1 的退化投影 \(\mathbf{1}\boldsymbol p^\top\)。换言之——深度本身并不产生新信息，它只是概率质量的一次次转移；而多次转移的极限，是把全部质量押到单一稳态方向。这一结论与具体数据无关，是注意力加权平均本质的直接推论。</p>
+  <p class="reveal">把 \(\{A_\ell\}\) 视为一列行随机矩阵时，其连乘继承了经典马尔可夫链的代数结构：各行均值方向被逐层对齐，混合时间由次主导特征值的模 \(|\lambda_2(A_\ell)|\) 控制，差异方向按 \(\prod_\ell|\lambda_2^{(\ell)}|\) 衰减；在一致遍历条件下，乘积收敛到秩 1 的退化投影 \(\mathbf{1}\boldsymbol p^\top\)。换言之——深度本身并不产生新信息，它只是概率质量的一次次转移；而多次转移的极限，是全部质量集中于单一稳态方向。这一结论与具体数据无关，是注意力加权平均本质的直接推论。</p>
 
   <div class="thm reveal">
     <div class="lbl">命题 · 秩崩塌</div>
@@ -651,7 +651,7 @@ a:hover{text-decoration:underline;}
 
   <div class="thm reveal">
     <div class="lbl">定义 · 谱崩塌与有效秩</div>
-    <p style="margin:6px 0;">对矩阵 \(H\in\mathbb{R}^{T\times d}\) 做奇异值分解 \(H=U\Sigma V^\top\)，\(\Sigma=\operatorname{diag}(\sigma_1,\dots,\sigma_r)\)，\(\sigma_1\ge\sigma_2\ge\cdots\)。记归一化能量份额 \(p_k=\sigma_k^2/\sum_{k'}\sigma_{k'}^2\)，有效秩 \(\mathrm{erank}(H)=\exp(-\sum_k p_k\log p_k)\)。<b>谱崩塌</b>指如下状态：</p>
+    <p style="margin:6px 0;">对矩阵 \(H\in\mathbb{R}^{T\times d}\) 做奇异值分解（SVD）\(H=U\Sigma V^\top\)，\(\Sigma=\operatorname{diag}(\sigma_1,\dots,\sigma_r)\)，\(\sigma_1\ge\sigma_2\ge\cdots\)。记归一化能量份额 \(p_k=\sigma_k^2/\sum_{k'}\sigma_{k'}^2\)，有效秩（effective rank）\(\mathrm{erank}(H)=\exp(-\sum_k p_k\log p_k)\)。<b>谱崩塌</b>指如下状态：</p>
     \[p_1\;\to\;1,\qquad \mathrm{erank}(H)\;\to\;1,\qquad \sigma_{k\ge2}\le\epsilon\,\sigma_1\ (\epsilon\ll 1)\]
     <p style="margin:6px 0;">直观地说：几乎全部表示能量集中在<b>一个</b>方向上，其余方向（长尾 item 的差异所在）近乎为零——表示空间在统计意义上退化为一条直线。</p>
   </div>
@@ -806,13 +806,13 @@ a:hover{text-decoration:underline;}
     <figcaption><b>前向–反向回路（依 SpecFormer 的刻画改绘）。</b> 坍缩的 \(H\) 生成低秩 \(A\)：前向低通滤波滤除次奇异方向的差异，反向梯度饥饿阻断同一批方向的更新；正反馈在 \(H\) 与 \(A\) 之间闭合，有效秩在 \(O(1)\) 层内趋于耗尽。</figcaption>
   </div>
 
-  <p class="reveal">至此，谱崩塌已被刻画为一个自增强的状态：数据侧的行相关提供初值（图 2 与命题），注意力侧的低通与饥饿提供动力（图 4 的回路）；SpecFormer 以可学习谱软化直接整形 \(\Sigma\)，有效而已部署，却也为每层的前向引入一次同阶的奇异值分解。这留下一个值得追究的问题：集中既然由具体的结构制造，若能在源头将其识别并移除，是否就不必整体进入谱域付费？回答它需要把分辨率从"矩阵整体"下沉到"传播路径"——下一节讨论网络科学对这一现象的成熟表述：局部化（localization）。</p>
+  <p class="reveal">至此，谱崩塌已被刻画为一个自增强的状态：数据侧的行相关提供初值（图 2 与命题），注意力侧的低通与饥饿提供动力（图 4 的回路）；SpecFormer 以可学习谱软化直接整形 \(\Sigma\)，有效而已部署，却也为每层的前向引入一次同阶的奇异值分解。这留下一个值得追究的问题：集中既然由具体的结构制造，若能在源头将其识别并移除，是否就可以避免逐层的谱分解？回答它需要把分辨率从"矩阵整体"下沉到"传播路径"——下一节讨论网络科学对这一现象的成熟表述：局部化（localization）。</p>
 </section>
 
 <!-- ==================== 4. 局部化 ==================== -->
 <section id="sec4" class="act">
   <div class="kick reveal"><span class="actnum">4</span> LOCALIZATION AND THE BACKTRACKING BIAS</div>
-  <h2 class="title reveal d1">局部化（Localization）：回溯路径给矩阵连乘带来的偏差<span class="sub">网络科学早就见过同一现象：主特征向量集中在少数 hub 上，谱质量被反复主导放大</span></h2>
+  <h2 class="title reveal d1">局部化（Localization）：回溯路径给矩阵连乘带来的偏差<span class="sub">网络科学对同一现象已有成熟刻画：主特征向量集中于少数 hub，谱质量被反复放大</span></h2>
 
   <p class="lead reveal">谱崩塌是一个明确的问题，但标准的谱干预须以逐层 SVD 为代价——在推荐系统的服务约束下，这一代价并不轻。本文转而从另一个角度审视它：集中不是凭空发生的，它由具体的传播路径制造；若能指认并移除这类路径，则无需触碰任何谱分解。本节先在一个最小的两步例子上建立直觉，再从组合、概率、谱三个角度给出同一现象的等价刻画，最后统一到全文符号。</p>
 
@@ -1107,7 +1107,7 @@ a:hover{text-decoration:underline;}
     <figcaption style="border:none;padding-top:4px;margin-top:2px;">TDA 在 OneTrans 块中的位置：主干 Norm→Attn→FFN 不变，仅注意力消息被替换；缓存项以虚线引入。下方面板是被移除的对象——reciprocal echo。</figcaption>
     </figure>
     </div>
-    <p style="margin:4px 0;">互反对积 \(A_\ell\odot A_{\ell-1}^{\top}\) 与行和 \(O(HT^2)\)（缓存 \(O(HT^2)\)）；历史投影复用上一层 \(W_V\)，\(O(Td)\)；对角修正与减法 \(O(Td)\)。总计每块 <b>\(O(HT^2+Td)\)</b>——相对注意力本身的 \(O(T^2d)\) 低一个 \(d_h\) 因子。短序列推荐（\(T\approx59\)）实测开销约 2–3% FLOPs。</p>
+    <p style="margin:4px 0;">互反对积 \(A_\ell\odot A_{\ell-1}^{\top}\) 与行和 \(O(HT^2)\)（缓存 \(O(HT^2)\)）；历史投影复用上一层 \(W_V\)，\(O(Td)\)；对角修正与减法 \(O(Td)\)。总计每块 <b>\(O(HT^2+Td)\)</b>——相对注意力本身的 \(O(T^2d)\) 低一个 \(d_h\) 因子。短序列推荐（\(T\approx59\)）实测开销约 2–3% FLOPs【需补充：测量配置与统计口径】。</p>
     <div style="margin:10px 0 4px;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:12.5px;">
       <div style="display:flex;background:var(--card2);padding:7px 14px;font-family:var(--font-head);font-weight:700;color:var(--ink2);"><span style="flex:1.3;">方法（每块）</span><span style="flex:1;">附加开销</span><span style="flex:1.9;">备注</span></div>
       <div style="display:flex;padding:7px 14px;border-top:1px solid var(--line);"><span style="flex:1.3;">OneTrans 骨干 · 标准注意力</span><span style="flex:1;font-family:var(--font-mono);">\(O(T^2d)\)</span><span style="flex:1.9;color:var(--ink2);">主体开销</span></div>
@@ -1143,7 +1143,7 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">7</span> EMPIRICAL OBSERVATION</div>
   <h2 class="title reveal d1">初步观测：移除回溯后，退化放缓<span class="sub">以行相似度与有效秩两个指标，度量注意力矩阵随深度的退化速率</span></h2>
 
-  <p class="lead reveal">若上述路径机制成立，则存在一个可检验的预测：移除回溯路径后，注意力矩阵（及其跨层乘积）的退化应被减缓——各行不再快速地趋向一致，有效秩不再快速地滑向 1。以下给出以 row similarity 与 effective rank 为度量的对比观测。</p>
+  <p class="lead reveal">若上述路径机制成立，则存在一个可检验的预测：移除回溯路径后，注意力矩阵（及其跨层乘积）的退化应被减缓——各行不再快速地趋向一致，有效秩不再快速地滑向 1。我们以 row similarity 与 effective rank 为指标，给出如下对比观测。</p>
 
   <div class="thm reveal">
     <div class="lbl">两个指标</div>
@@ -1180,22 +1180,22 @@ a:hover{text-decoration:underline;}
 
   <div class="box grn reveal">
     <div class="lbl">小结</div>
-    <p style="margin:4px 0;">标准注意力的深层乘积趋向低有效秩；TDA 从相邻两层读出回溯质量并施加门控修正后，行相似度与有效秩的退化均被<b>减缓</b>。这是与"回溯路径加速崩塌"假设一致的间接证据。观测同时也暴露了 TDA 的边界——饱和被推迟而未取消，二次代价原样保留——下一节从这张账单出发，把扣除从相邻两层推进到每一次写入。</p>
+    <p style="margin:4px 0;">标准注意力的深层乘积趋向低有效秩；TDA 从相邻两层读出回溯质量并施加门控修正后，行相似度与有效秩的退化均被<b>减缓</b>。这是与"回溯路径加速崩塌"假设一致的间接证据。观测同时界定了 TDA 的两个边界：饱和点被推后而非取消；注意力的二次复杂度保持不变。下一节由此出发，讨论如何把扣除推进到每一步写入，并把复杂度对长度的依赖降为线性。</p>
   </div>
 </section>
 
 <!-- ==================== 8. KDA ==================== -->
 <section id="sec8" class="act">
   <div class="kick reveal"><span class="actnum">8</span> LINEAR ATTENTION AND THE DELTA RULE</div>
-  <h2 class="title reveal d1">从 TDA 的边界出发：delta 规则与 KDA<span class="sub">§7 的账单显示，饱和被推迟而未取消、二次代价原样保留——把扣除推进到每一步、把复杂度降为线性，需要线性注意力中的 delta 规则</span></h2>
+  <h2 class="title reveal d1">从 TDA 的边界出发：delta 规则与 KDA<span class="sub">§7 的观测界定了 TDA 的两个边界：饱和点被推后而非取消，二次复杂度保持不变——把扣除推进到每一步、把复杂度降为线性，需要线性注意力中的 delta 规则</span></h2>
 
-  <p class="lead reveal">§7 的观测给出一张有得有失的账单。所得：移除两步回声后，行相似度与有效秩的退化同时放缓，可用深度从 6–8 层延伸至 12 层，同规模下的 CVR 与 C-UAUC 均超过未修正的骨干。所失有二，且都被表 1 记录在案：其一，16 层处增益回落而 p99 继续上升——TDA 推迟了饱和点，但没有取消它，degree-two 截断只移除两步的回声，更长的回环与团内互相注视仍在积累集中；其二，TDA 修正的是消息的内容，不是注意力的形态——\(T\times T\) 矩阵、\(O(T^2)\) 的计算与随长度增长的 KV 缓存原样保留，当行为序列从数十走向数千，这些将主导服务成本。前者关乎更深的上限，后者关乎更长的代价。将两个边界并置，问题自然前进一步：扣除能否发生在每一次写入处，而不只是相邻两层之间？注意力对长度的依赖能否降为线性？线性注意力对后一问题的回答已广为人知；而它对前一问题的回答——delta 规则——恰与 TDA 出自同一谱系。本节循此展开：先在快权重状态中重逢 \(\S4\) 的谱集中，再给出 delta 规则与 KDA 的递推，最后回到 OneTrans，说明 TDA 与 KDA 何以分工、何以叠加。</p>
+  <p class="lead reveal">§7 的观测确认了回溯扣除的有效性，也界定了它的两个边界。其一：16 层处增益回落而 p99 继续上升——degree-two 截断只移除两步回溯，更长的回环与稠密子结构内部的互相注视仍会积累集中，饱和点被推后而非取消。其二：TDA 修正的是消息的内容，不改变注意力的形态——\(T\times T\) 矩阵、\(O(T^2)\) 计算与随长度增长的 KV cache（键值缓存）原样保留，行为序列从数百走向数千时，这两项将主导服务成本。前者限制可用的深度，后者限制可用的长度。两个边界指向同一个问题：扣除能否发生在每一次写入处？注意力对长度的依赖能否降为线性？线性注意力（linear attention）对后一问已有回答；它对前一问的回答——delta 规则（delta rule）——与 TDA 出自同一构造原则。本节先在快权重状态中重遇 §4 的谱集中，再给出 delta 规则与 KDA 的递推，最后回到 OneTrans，说明 TDA 与 KDA 的分工与结合。</p>
 
-  <h3 class="reveal">从累加到增量：状态空间中的谱集中重逢</h3>
+  <h3 class="reveal">从累加到增量：状态空间中的谱集中</h3>
 
   <p class="reveal">线性注意力不再物化 \(T\times T\) 的注意力矩阵，转而维护一个 \(d\times d\) 的<b>快权重状态</b>（fast weight state）\(S_t\)，随 token 序列递推更新——此即 Schlag et al. (2021) 的快权重编程（fast weight programmer）视角。移去 softmax 后，写与读分离：每个 token 把外积 \(k_tv_t^{\top}\) 累加进状态，查询从状态中读出，</p>
   \[S_t=S_{t-1}+k_tv_t^{\top},\qquad h_t=S_t^{\top}q_t\]
-  <p class="reveal">每 token 计算与读出均为 \(O(d^2)\)，对长度线性——快，但<b>纯累加对重复方向没有免疫</b>。推荐序列中重复出现的 item、类目与意图使键向量 \(k_t\) 高度相关，状态能量沿这些方向持续堆积。这正是 §4 的局部化在状态空间中的重逢：那里，回溯路径喂养两步算子的对角元；这里，重复键喂养状态的主奇异方向。同一种病，换了一个器官发作。</p>
+  <p class="reveal">每 token 计算与读出均为 \(O(d^2)\)，对长度线性——快，但<b>纯累加对重复方向没有免疫</b>。推荐序列中重复出现的 item、类目与意图使键向量 \(k_t\) 高度相关，状态能量沿这些方向持续堆积。这与 §4 的局部化机制同源：token 图中，回溯路径反复加权两步算子的对角元；状态空间中，重复键反复累积主奇异方向的能量。同一机制在不同空间的呈现。</p>
 
   <div class="box pur reveal">
     <div class="lbl">delta 规则（delta rule；Schlag et al. 2021）</div>
@@ -1210,7 +1210,7 @@ a:hover{text-decoration:underline;}
     <p style="margin:6px 0;">这是"delta 规则天然适配高重复序列"的矩阵表述，也是它与 §3 的低秩输入正面对接之处——输入的重复性由写入端吸收，而非累积成新的集中。状态的有效秩由此获得机制性的下界。</p>
   </div>
 
-  <p class="reveal">与 TDA 对照，可以看到同一原理的两档实施。TDA 的 \(P_2\) 在相邻两层之间做一次扣除——\(L\) 层共 \(L-1\) 次，移除的是两步回声；delta 规则在每一次写入处扣除——每 token 一次，移除的是任意步数的重复回写。两者修正的对象同属"朴素矩阵幂"的偏差：朴素幂 \(A^L\) 高计回溯路径，故有非回溯多项式 \(P_k=AP_{k-1}-(D-I)P_{k-2}\)（§5）；朴素累加高计重复方向，故有 delta 递推。修正的幂序列、显式扣除的回声项——\(\S5\) 的递推与本式的亲缘，是"同一条原理"最直接的证据。</p>
+  <p class="reveal">与 TDA 对照，可以看到同一原理的两种粒度。TDA 的 \(P_2\) 在相邻两层之间扣除——\(L\) 层共 \(L-1\) 次，移除两步回溯；delta 规则在每一次写入处扣除——每 token 一次，移除任意步数的重复写回。两者修正的是同一类偏差：朴素矩阵幂 \(A^L\) 高计回溯路径，故有非回溯多项式 \(P_k=AP_{k-1}-(D-I)P_{k-2}\)（§5）；朴素累加高计重复方向，故有 delta 递推。同为"修正的幂序列、显式扣除的重复项"——§5 的递推与 delta 递推的这种对应，是二者同源的直接代数证据。</p>
 
   <h3 class="reveal">KDA：把 delta 规则做成大模型组件（Kimi Team 2025, arXiv:2510.26692）</h3>
 
@@ -1307,20 +1307,20 @@ a:hover{text-decoration:underline;}
     </ul>
   </div>
 
-  <h3 class="reveal">分工与结合：命题 4 的另一半</h3>
+  <h3 class="reveal">分工与结合：与命题 4 的衔接</h3>
 
-  <p class="reveal">命题 4 曾像一个限制：TDA 在纯因果子图上退化为标准注意力，修正量为零。放在 KDA 旁边，它是一个接口。KDA 的递推天然因果——状态只随序列向前累积，这正是它对长度线性、可块化并行的根源。于是两类注意力恰好把 OneTrans 的输入划分干净：<b>行为序列</b>长、重复、按时间向前，是 KDA 的领地；<b>候选与特征交互</b>短、双向、异质，是 softmax 与 TDA 的领地。命题 4 保证 TDA 不越界干扰因果侧，KDA 的因果性保证它不与 TDA 的修正冲突——回声只存在于双向交互处，线性复杂度只需要因果性，两个修正各取所需，互不踩脚。</p>
+  <p class="reveal">命题 4 曾像一个限制：TDA 在纯因果子图上退化为标准注意力，修正量为零。与 KDA 并置，它成为分工的依据。KDA 的递推天然因果——状态只随序列向前更新，这正是它对长度线性、可块化并行的根源。于是两类注意力恰好覆盖 OneTrans 的两类输入：<b>行为序列</b>长、重复、按时间单向，适合 KDA 的因果递推；<b>候选与特征交互</b>短、双向、异质，需要 softmax 注意力与 TDA 的回溯扣除。命题 4 保证 TDA 不作用于因果子图，KDA 的因果性保证其递推不与 TDA 的修正对象重叠——跨层回溯只存在于双向交互处，两类修正的作用域不相交，可以直接叠加。</p>
 
   <div class="box cy reveal d1">
     <div class="lbl">结合的三个层次</div>
     <ul style="margin:6px 0;padding-left:20px;">
       <li><b>架构层 · 混合栈</b>：行为序列侧换用 KDA 块——对长度线性、状态恒为 \(d\times d\)，在线推理无 KV 膨胀；候选交互侧保留 softmax 注意力并挂载 TDA——零新参数、每块 \(O(HT^2+Td)\)。Kimi Linear 以 KDA 与 MLA 的逐层混合在语言侧验证了这种栈的工程可行性；OneTrans 的块结构（Norm &rarr; Attn &rarr; FFN）并不绑定 softmax，替换是局部的；</li>
-      <li><b>参数层 · 先验传递</b>：TDA 从相邻两层读出的回溯质量 \(b_{\ell}\) 标记"何处回声强"，可作为 KDA 块内门控 \(\beta_t\) 的先验——回声强的请求扣除更深。\(b_{\ell}\) 本就是前向已计算的量，这是一个几乎免费的跨空间耦合；</li>
-      <li><b>算子层 · 研究方向</b>：delta 扣除的是状态中沿当前键 \(k_t\) 的已有分量；自然的延伸是扣除<b>上一步刚读出的方向</b>——对相邻键的相关性做修正，即状态空间中的"禁止原路返回"。这一算子能否保持 WY 块化的可微与线性，是最值得追的开放问题，§9 将其列为路线之首。</li>
+      <li><b>参数层 · 先验传递</b>：TDA 从相邻两层读出的回溯质量 \(b_{\ell}\) 定位回溯集中的请求，可作为 KDA 块内门控 \(\beta_t\) 的先验——回溯强的样本扣除更深。\(b_{\ell}\) 本就是前向已计算的量，附加成本可忽略；</li>
+      <li><b>算子层 · 研究方向</b>：delta 扣除的是状态中沿当前键 \(k_t\) 的已有分量；自然的延伸是扣除<b>上一步刚读出的方向</b>——对相邻键的相关性做修正，即状态空间中的"禁止原路返回"。这一算子能否保持 WY 块化的可微与线性，是本路线上优先级最高的开放问题（列入 §9）。</li>
     </ul>
   </div>
 
-  <p class="reveal">至此，§7 账单上的两条边界都有了着落：更深的上限由 TDA 守——移除跨层回声，把饱和点推后；更长的代价由 KDA 守——每步扣除、状态有界，把复杂度降为线性。而两者背后是同一个动作：在平均或写入之前，扣除已有的分量。下一节把这条原理正式陈述，并给出验证它的实验路线。</p>
+  <p class="reveal">至此，§7 暴露的两个边界各有对策：深度方向，TDA 移除跨层回溯、推迟饱和点；长度方向，KDA 逐步扣除、状态有界，复杂度对长度线性。两者背后是同一个操作：在平均或写入之前，扣除该方向上已有的分量。下一节正式陈述这一原理，并给出验证它的实验路线。</p>
 </section>
 
 <!-- ==================== 9. 统一观点 ==================== -->
@@ -1328,28 +1328,28 @@ a:hover{text-decoration:underline;}
   <div class="kick reveal"><span class="actnum">9</span> ONE PRINCIPLE, TWO SPACES</div>
   <h2 class="title reveal d1">统一观点：矩阵视角下的注意力<span class="sub">从防止崩塌到加速部署——更深与更快，是同一次扣除的两面</span></h2>
 
-  <p class="lead reveal">把全文的矩阵物件并置在同一张桌上，格局如下。注意力可以在三个空间被干预，而只有后两个既不需要特征分解，又同时守住深度与速度：</p>
+  <p class="lead reveal">将前文的干预手段放入同一坐标系比较：注意力可以在三个空间被修正，其中后两个既不需要特征分解，又能同时兼顾深度与速度——</p>
 
   <div class="figure reveal">
     <span class="tag">表 2 · 三个空间，四种干预</span>
     <table class="paptab">
       <caption>以 softmax 骨干为参照系；附加开销按每块计，\(C\) 为 KDA 的块长。</caption>
-      <thead><tr><th style="text-align:left;">范式</th><th style="text-align:left;">作用空间</th><th style="text-align:left;">对回声的处理</th><th style="text-align:left;">附加开销</th><th style="text-align:left;">深度可用性</th><th style="text-align:left;">部署属性</th></tr></thead>
+      <thead><tr><th style="text-align:left;">范式</th><th style="text-align:left;">作用空间</th><th style="text-align:left;">对重复分量的处理</th><th style="text-align:left;">附加开销</th><th style="text-align:left;">深度可用性</th><th style="text-align:left;">部署属性</th></tr></thead>
       <tbody>
-        <tr><td>Softmax 注意力（骨干）</td><td>\(T\times T\)，行随机</td><td>无：回声随层累积</td><td>—（主体 \(O(T^2d)\)）</td><td>✗ 趋向秩 1</td><td>KV cache 随长度增长</td></tr>
+        <tr><td>Softmax 注意力（骨干）</td><td>\(T\times T\)，行随机</td><td>无：重复分量随层累积</td><td>—（主体 \(O(T^2d)\)）</td><td>✗ 趋向秩 1</td><td>KV cache 随长度增长</td></tr>
         <tr><td>谱整形（SpecFormer）</td><td>\(\Sigma\) 谱域</td><td>事后重排全部奇异值</td><td>\(O(T^2d+Td^2)\)，逐层 SVD</td><td>✓（报告深度扩展）</td><td>SVD 非矩阵乘，可微与部署负担重</td></tr>
         <tr><td>TDA（本文）</td><td>\(T\times T\)，路径级</td><td>事前移除两步回溯（减对角）</td><td>\(O(HT^2+Td)\)</td><td>✓ 初步观测（§7）</td><td>零新参数，纯低阶算子</td></tr>
         <tr class="best"><td>KDA（Kimi Linear）</td><td>\(d\times d\)，状态级</td><td>写前扣除沿键分量（秩 1 挠除）</td><td>对 \(T\) 线性</td><td>✓（K3 以之支撑 2.8T 深度）</td><td>常数状态，KV cache −75%，解码 6×</td></tr>
       </tbody>
     </table>
-    <p class="tabnote">四行不是四个独立的发明，而是同一原理在不同空间的投影：行随机平均把回声累积成主导方向；谱域把后果重排；\(T\times T\) 与 \(d\times d\) 把原因扣除。</p>
+    <p class="tabnote">四行并非四个独立的发明，而是同一原理在不同空间的实例：行随机平均使重复方向持续累积为主导方向；谱域重排其后果；\(T\times T\) 与 \(d\times d\) 在源头扣除。</p>
   </div>
 
   <div class="box gold reveal d1">
-    <div class="lbl">原理 · 扣除回声，写入增量</div>
-    <p style="margin:4px 0;"><b>崩塌的机制刻画</b>：连乘算子中存在自强化的回声方向——token 图上的回溯路径 \(i\to j\to i\)，或状态空间中重复键的再写入——它们把次主谱的能量搬给主导方向，有效秩随深度衰减。</p>
+    <div class="lbl">原理 · 扣除已有分量，写入增量</div>
+    <p style="margin:4px 0;"><b>崩塌的机制刻画</b>：连乘算子中存在自强化的重复方向——token 图上的回溯路径 \(i\to j\to i\)，或状态空间中重复键的再写入——它们把次主谱的能量搬给主导方向，有效秩随深度衰减。</p>
     <p style="margin:4px 0;"><b>修复的充分策略</b>：在每次平均或写入之前，扣除该方向上已有的分量——减去对角质量（TDA 的 \(\Pi_\ell-\beta_\ell D_\ell\)），或作秩 1 挠除（delta 规则的 \((I-\beta_tk_tk_t^{\top})S_{t-1}\)）。两件事同时发生：主导方向不再虚增（更深），修正本身是矩阵乘（更快、可部署）。</p>
-    <p style="margin:4px 0;"><b>与既有工具的亲缘</b>：残差的 \(1/\sqrt{L}\) 缩放（Noci 定理 3.2）在层级压低每步平均的权重，是同族中最温和的成员——减缓而不消除；谱整形重排后果；非回溯与 delta 规则扣除原因。Noci 的判别准则、Saada 的谱间隙、SpecFormer 的谱整形、TDA 的对角扣除、KDA 的秩 1 挠除——同一棵矩阵族谱上的五片叶子，落点从层级、谱域一路走向因子空间。</p>
+    <p style="margin:4px 0;"><b>与既有工具的关系</b>：残差的 \(1/\sqrt{L}\) 缩放（Noci 定理 3.2）在层级压低每步平均的权重，是同族中强度最低的一种——减缓而不消除；谱整形重排后果；非回溯与 delta 规则扣除原因。Noci 的判别准则、Saada 的谱间隙、SpecFormer 的谱整形、TDA 的对角扣除、KDA 的秩 1 挠除，是同一构造原则的五次实例化，作用点从层级、谱域逐步移至因子空间。</p>
   </div>
 
   <div class="thm reveal d2">
@@ -1358,7 +1358,7 @@ a:hover{text-decoration:underline;}
       <thead><tr><th style="text-align:left;"></th><th style="text-align:left;">TDA（§4–§6）</th><th style="text-align:left;">delta 规则（§8）</th></tr></thead>
       <tbody>
         <tr><td>作用空间</td><td>\(T\times T\) token 图（两步游走算子）</td><td>\(d\times d\) 快权重状态</td></tr>
-        <tr><td>回声的形态</td><td>路径 \(i\to j\to i\)，落在乘积对角 \(b_{\ell,i}\)</td><td>沿 \(k_t\) 的已有分量，重复键反复累加</td></tr>
+        <tr><td>重复分量的形态</td><td>路径 \(i\to j\to i\)，落在乘积对角 \(b_{\ell,i}\)</td><td>沿 \(k_t\) 的已有分量，重复键反复累加</td></tr>
         <tr><td>修正算子</td><td>减对角：\(\Pi_\ell-\beta_\ell D_\ell\)</td><td>秩 1 挠除：\((I-\beta_tk_tk_t^{\top})S_{t-1}\)</td></tr>
         <tr><td>使用的代数</td><td>Hadamard 积 + 对角缩放</td><td>低秩外积 + 秩 1 挠除</td></tr>
         <tr><td>谱域介入</td><td colspan="2" style="text-align:center;">均为零——不进 \(\Sigma\) 空间，无 SVD</td></tr>
@@ -1393,13 +1393,13 @@ a:hover{text-decoration:underline;}
       <tr><td>⑤ 非回溯算子</td><td>\(N_\ell=A_\ell A_{\ell-1}-D_\ell\)，精确移除两步回溯</td><td>Hashimoto 1989 等</td></tr>
       <tr><td>⑥ TDA + 初步观测</td><td>门控减回溯，附加 \(O(HT^2+Td)\) 与骨干同阶；退化放缓（§7）</td><td>本文</td></tr>
       <tr><td>⑦ delta 规则与 KDA</td><td>\(S_t=(I-\beta_tk_tk_t^{\top})\Lambda_tS_{t-1}+\beta_tk_tv_t^{\top}\)；对 \(T\) 线性、常数状态，KV cache \(-75\%\)</td><td>Schlag 2021；Kimi Team 2025</td></tr>
-      <tr><td>⑧ 统一观点</td><td>扣除回声、写入增量：\(T\times T\) 与 \(d\times d\) 的同构修正——更深与更快是同一原理的两面</td><td>§9</td></tr>
+      <tr><td>⑧ 统一观点</td><td>扣除已有分量、写入增量：\(T\times T\) 与 \(d\times d\) 的同构修正——更深与更快源于同一原理</td><td>§9</td></tr>
     </tbody>
   </table>
 
   <div class="box gold reveal">
     <div class="lbl">结语</div>
-    <p style="margin:4px 0;">排序 Transformer 的深度天花板，既来自输入的低秩，也来自被回溯路径持续放大的局部化通道；而长上下文的代价，则来自 \(T\times T\) 注意力矩阵本身。矩阵语言把两个问题归并为同一个动作：在平均或写入之前，扣除回声方向上已有的分量。TDA 在 token 图上执行它，把可用深度从 6–8 层延长到 12–16 层；KDA 的 delta 规则在快权重状态上执行它，把复杂度对长度的依赖降为线性、把缓存压成常数。Make it deeper，keep it faster——不是一个愿望的两半，而是一次扣除的两面。</p>
+    <p style="margin:4px 0;">排序 Transformer 的深度天花板，既来自输入的低秩，也来自被回溯路径持续放大的局部化通道；而长上下文的代价，则来自 \(T\times T\) 注意力矩阵本身。矩阵语言把两个问题归并为同一个动作：在平均或写入之前，扣除该方向上已有的分量。TDA 在 token 图上执行它，把可用深度从 6–8 层延长到 12–16 层；KDA 的 delta 规则在快权重状态上执行它，把复杂度对长度的依赖降为线性、把缓存压成常数。Make it deeper，keep it faster——二者是同一构造原则在两个因子空间的结果。</p>
   </div>
 </section>
 
